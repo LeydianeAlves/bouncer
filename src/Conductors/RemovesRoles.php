@@ -3,12 +3,16 @@
 namespace Silber\Bouncer\Conductors;
 
 use Illuminate\Database\Eloquent\Model;
+use Silber\Bouncer\Conductors\Concerns\ConductsRoles;
 use Silber\Bouncer\Database\Models;
 use Silber\Bouncer\Database\Role;
+use Silber\Bouncer\Database\Queries\RolesForRestriction;
 use Silber\Bouncer\Helpers;
 
 class RemovesRoles
 {
+    use ConductsRoles;
+
     /**
      * The roles to be removed.
      *
@@ -30,23 +34,29 @@ class RemovesRoles
      * Remove the role from the given authority.
      *
      * @param  \Illuminate\Database\Eloquent\Model|array|int  $authority
-     * @return void
+     * @param  \Illuminate\Database\Eloquent\Model|array|null  $restrictedModels
+     * @return \Silber\Bouncer\Conductors\Lazy\ConductsRetraction|void
      */
-    public function from($authority)
+    public function from($authority, $restrictedModels = null)
     {
         if (! ($roleIds = $this->getRoleIds())) {
             return;
         }
 
+        if ($this->shouldConductLazy(...func_get_args())) {
+            return $this->conductLazyFrom($authority);
+        }
+
         $authorities = is_array($authority) ? $authority : [$authority];
+        $restrictions = RolesForRestriction::getRestrictions($restrictedModels);
 
         foreach (Helpers::mapAuthorityByClass($authorities) as $class => $keys) {
-            $this->retractRoles($roleIds, $class, $keys);
+            $this->retractRoles($roleIds, $class, $keys, $restrictions);
         }
     }
 
     /**
-     * Get the IDs of anyexisting roles provided.
+     * Get the IDs of any existing roles provided.
      *
      * @return array
      */
@@ -89,9 +99,10 @@ class RemovesRoles
      * @param  array  $roleIds
      * @param  string  $authorityClass
      * @param  array  $authorityIds
+     * @param  array  $restrictions
      * @return void
      */
-    protected function retractRoles($roleIds, $authorityClass, $authorityIds)
+    protected function retractRoles($roleIds, $authorityClass, $authorityIds, $restrictions)
     {
         $query = $this->newPivotTableQuery();
 
@@ -99,9 +110,17 @@ class RemovesRoles
 
         foreach ($roleIds as $roleId) {
             foreach ($authorityIds as $authorityId) {
-                $query->orWhere($this->getDetachQueryConstraint(
-                    $roleId, $authorityId, $morphType
-                ));
+                if (! empty($restrictions)) {
+                    foreach ($restrictions as $restriction) {
+                        $query->orWhere($this->getDetachQueryConstraint(
+                            $roleId, $authorityId, $morphType, $restriction
+                        ));
+                    }
+                } else {
+                    $query->orWhere($this->getDetachQueryConstraint(
+                        $roleId, $authorityId, $morphType
+                    ));
+                }
             }
         }
 
@@ -114,16 +133,20 @@ class RemovesRoles
      * @param  mixed  $roleId
      * @param  mixed  $authorityId
      * @param  string  $morphType
+     * @param  mixed  $restriction
      * @return \Closure
      */
-    protected function getDetachQueryConstraint($roleId, $authorityId, $morphType)
+    protected function getDetachQueryConstraint($roleId, $authorityId, $morphType, $restriction = null)
     {
-        return function ($query) use ($roleId, $authorityId, $morphType) {
-            $query->where(Models::scope()->getAttachAttributes() + [
-                'role_id' => $roleId,
-                'entity_id' => $authorityId,
-                'entity_type' => $morphType,
-            ]);
+        return function ($query) use ($roleId, $authorityId, $morphType, $restriction) {
+            $query->where(Models::scope()->getAttachAttributes() 
+                + RolesForRestriction::getAttachAttributes($restriction)
+                + [
+                    'role_id' => $roleId,
+                    'entity_id' => $authorityId,
+                    'entity_type' => $morphType,
+                ]
+            );
         };
     }
 
