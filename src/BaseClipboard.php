@@ -14,11 +14,12 @@ abstract class BaseClipboard implements Contracts\Clipboard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return bool
      */
-    public function check(Model $authority, $ability, $model = null)
+    public function check(Model $authority, $ability, $model = null, $restrictedModel = null)
     {
-        return (bool) $this->checkGetId($authority, $ability, $model);
+        return (bool) $this->checkGetId($authority, $ability, $model, $restrictedModel);
     }
 
     /**
@@ -26,12 +27,12 @@ abstract class BaseClipboard implements Contracts\Clipboard
      *
      * @param  array|string  $roles
      * @param  string  $boolean
+     * @param  Model|string|null  $restrictedModel
      * @return bool
      */
-    public function checkRole(Model $authority, $roles, $boolean = 'or')
+    public function checkRole(Model $authority, $roles, $boolean = 'or', $restrictedModel = null)
     {
-        $count = $this->countMatchingRoles($authority, $roles);
-
+        $count = $this->countMatchingRoles($authority, $roles, $restrictedModel);
         if ($boolean == 'or') {
             return $count > 0;
         } elseif ($boolean === 'not') {
@@ -46,11 +47,12 @@ abstract class BaseClipboard implements Contracts\Clipboard
      *
      * @param  \Illuminate\Database\Eloquent\Model  $authority
      * @param  array|string  $roles
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return int
      */
-    protected function countMatchingRoles($authority, $roles)
+    protected function countMatchingRoles($authority, $roles, $restrictedModel)
     {
-        $lookups = $this->getRolesLookup($authority);
+        $lookups = $this->getRolesLookup($authority, $restrictedModel);
 
         return count(array_filter($roles, function ($role) use ($lookups) {
             switch (true) {
@@ -69,14 +71,17 @@ abstract class BaseClipboard implements Contracts\Clipboard
     /**
      * Get the given authority's roles' IDs and names.
      *
+     * @param Model|string|null $restrictedModel
      * @return array
      */
-    public function getRolesLookup(Model $authority)
+    public function getRolesLookup(Model $authority, $restrictedModel = null)
     {
-        $roles = $authority->roles()->get([
-            'name', Models::role()->getQualifiedKeyName(),
-        ])->pluck('name', Models::role()->getKeyName());
-
+        $roles = $authority
+            ->roles()
+            ->for($restrictedModel)
+            ->get(['name', Models::role()->getQualifiedKeyName()])
+            ->pluck('name', Models::role()->getKeyName());
+     
         return ['ids' => $roles, 'names' => $roles->flip()];
     }
 
@@ -88,6 +93,19 @@ abstract class BaseClipboard implements Contracts\Clipboard
     public function getRoles(Model $authority)
     {
         return $this->getRolesLookup($authority)['names']->keys();
+    }
+
+    /**
+     * Get the given authority's roles' names for a restricted role.
+     *
+     * @param Model|string|null $restrictedModel
+     * @return \Illuminate\Support\Collection
+     */
+    public function getRolesForRestrictedModel(Model $authority, $restrictedModel)
+    {
+        return $this->getRolesLookup($authority, $restrictedModel)
+            ['names']
+            ->keys();
     }
 
     /**
@@ -106,9 +124,25 @@ abstract class BaseClipboard implements Contracts\Clipboard
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getForbiddenAbilities(Model $authority)
+    public function getForbiddenAbilities(Model $authority, $restrictedModel = null)
     {
+        if ($restrictedModel) {
+            return $this->getAbilitiesForRestrictedModel($authority, false, $restrictedModel);
+        }
         return $this->getAbilities($authority, false);
+    }
+
+    /**
+     * Get a list of the authority's restricted abilities
+     * 
+     * @param bool $allowed
+     * @param  \Illuminate\Database\Eloquent\Model|string  $restrictedModel
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAbilitiesForRestrictedModel(Model $authority, $allowed = true, $restrictedModel)
+    {
+        return Abilities::restrictedForAuthority($authority, $allowed, $restrictedModel)
+            ->get();
     }
 
     /**
