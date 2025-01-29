@@ -131,6 +131,47 @@ class BouncerSimpleTest extends BaseTestCase
     }
 
     #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_give_and_remove_roles_for_restricted_model($provider)
+    {
+        [$bouncer, $user1] = $provider();
+
+        $account1 = Account::create();
+
+        $bouncer->allow('admin')->to('ban-users');
+        
+        $bouncer->assign('admin')->to($user1)->for($account1);
+
+        $this->assertTrue($bouncer->canForRestrictedModel('ban-users', $account1));
+        $this->assertTrue($bouncer->cannot('ban-users'));
+        $this->assertTrue($bouncer->cannotForRestrictedModel('ban-users', Account::create()));
+
+        $bouncer->retract('admin')->from($user1)->for($account1);
+
+        $this->assertFalse($bouncer->canForRestrictedModel('ban-users', $account1));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_give_and_remove_roles_for_multiple_restrictions($provider)
+    {
+        [$bouncer, $user] = $provider();
+
+        $account1 = Account::create();
+        $account2 = Account::create();
+
+        $bouncer->assign(['admin', 'viewer'])->to($user)->for([$account1, $account2]);
+
+        $this->assertTrue($bouncer->is($user)->allRestricted(['admin', 'viewer'], $account1));
+        $this->assertTrue($bouncer->is($user)->allRestricted(['admin', 'viewer'], $account2));
+  
+        $bouncer->retract(['admin', 'viewer'])->from($user)->for([$account1, $account2]);
+
+        $this->assertTrue($bouncer->is($user)->notARestricted(['admin', 'viewer'], $account1));
+        $this->assertTrue($bouncer->is($user)->notARestricted(['admin', 'viewer'], $account2));
+    } 
+
+    #[Test]
     public function deleting_a_role_deletes_the_pivot_table_records()
     {
         $bouncer = $this->bouncer();
@@ -184,6 +225,26 @@ class BouncerSimpleTest extends BaseTestCase
         $this->assertTrue($bouncer->is($user1)->notAn('admin'));
         $this->assertTrue($bouncer->is($user1)->an('editor'));
         $this->assertTrue($bouncer->is($user1)->an('admin', 'editor'));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_give_and_remove_roles_for_multiple_users_at_once_for_restricted_model($provider)
+    {
+        [$bouncer, $user1, $user2] = $provider(2);
+        $account = Account::create();
+
+        $bouncer->assign(['admin', 'editor'])->to([$user1, $user2])->for($account);
+
+        $this->assertTrue($bouncer->is($user1)->allRestricted(['admin', 'editor'], $account));
+        $this->assertTrue($bouncer->is($user2)->anRestricted(['admin', 'editor'], $account));
+
+        $bouncer->retract('admin')->from($user1)->for($account);
+        $bouncer->retract(collect(['admin', 'editor']))->from($user2)->for($account);
+
+        $this->assertTrue($bouncer->is($user1)->notAnRestricted('admin', $account));
+        $this->assertTrue($bouncer->is($user1)->anRestricted('editor', $account));
+        $this->assertTrue($bouncer->is($user1)->anRestricted(['admin', 'editor'], $account));
     }
 
     #[Test]

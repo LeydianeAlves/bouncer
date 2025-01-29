@@ -3,8 +3,10 @@
 namespace Silber\Bouncer\Conductors\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Silber\Bouncer\Conductors\Lazy;
 use Silber\Bouncer\Helpers;
+use Workbench\App\Models\User;
 
 trait ConductsRoles
 {
@@ -14,14 +16,21 @@ trait ConductsRoles
      * @param  \Illuminate\Database\Eloquent\Model|array|int  $authority
      * @return bool
      */
-    protected function shouldConductLazy($authority)
+    protected function shouldConductLazy($authorities)
     {
         // We'll only create a lazy conductor if we got a single
-        // param, and that single param is an array of authorities.
+        // param, and that single param is either a single authority or 
+        // an array of authorities.
+        
         if (func_num_args() > 1) {
             return false;
         }
-        return ! is_array($authority) || ! Helpers::isIndexedArray($authority);
+
+        $authorities = is_array($authorities) ? $authorities : [$authorities];
+        return (new Collection($authorities))
+            ->every(function ($authority) {
+                return $authority instanceof Model || $authority instanceof User;
+            });
     }
 
     /**
