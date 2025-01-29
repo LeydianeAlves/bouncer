@@ -71,7 +71,8 @@ class Clipboard extends BaseClipboard
     {
 
         // skips the `authority` and `everyone` constraints when checking for a restricted model only
-        $query = $restrictedModel
+        // if allowed is false, always check all abilities for the user
+        $query = $restrictedModel && $allowed
             ? Abilities::restrictedForAuthority($authority, $allowed, $restrictedModel)
             : Abilities::forAuthority($authority, $allowed);
 

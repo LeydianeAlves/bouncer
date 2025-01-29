@@ -114,22 +114,20 @@ abstract class BaseClipboard implements Contracts\Clipboard
      * @param  bool  $allowed
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilities(Model $authority, $allowed = true)
+    public function getAbilities(Model $authority, $allowed = true, $restrictedModel = null)
     {
-        return Abilities::forAuthority($authority, $allowed)->get();
+        return Abilities::forAuthority($authority, $allowed, $restrictedModel)->get();
     }
 
     /**
      * Get a list of the authority's forbidden abilities.
      *
+     * @param Model|string|null $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getForbiddenAbilities(Model $authority, $restrictedModel = null)
     {
-        if ($restrictedModel) {
-            return $this->getAbilitiesForRestrictedModel($authority, false, $restrictedModel);
-        }
-        return $this->getAbilities($authority, false);
+        return $this->getAbilities($authority, false, $restrictedModel);
     }
 
     /**

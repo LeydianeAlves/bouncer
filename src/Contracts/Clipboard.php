@@ -55,9 +55,10 @@ interface Clipboard
      * Get a list of the authority's abilities.
      *
      * @param  bool  $allowed
+     * @param Model|string|null $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilities(Model $authority, $allowed = true);
+    public function getAbilities(Model $authority, $allowed = true, $restrictedModel = null);
 
     /**
      * Get a list of the authority's forbidden abilities.

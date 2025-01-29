@@ -11,12 +11,13 @@ class Abilities
      * Get a query for the authority's abilities.
      *
      * @param  bool  $allowed
+     * @param Model|string|null $restrictedModel
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function forAuthority(Model $authority, $allowed = true)
+    public static function forAuthority(Model $authority, $allowed = true, $restrictedModel = null)
     {
-        return Models::ability()->where(function ($query) use ($authority, $allowed) {
-            $query->whereExists(static::getRoleConstraint($authority, $allowed));
+        return Models::ability()->where(function ($query) use ($authority, $allowed, $restrictedModel) {
+            $query->whereExists(static::getRoleConstraint($authority, $allowed, $restrictedModel));
             $query->orWhereExists(static::getAuthorityConstraint($authority, $allowed));
             $query->orWhereExists(static::getEveryoneConstraint($allowed));
         });
