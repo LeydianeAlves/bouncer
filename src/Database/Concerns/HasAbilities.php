@@ -68,6 +68,30 @@ trait HasAbilities
     }
 
     /**
+     * Get all of the model's allowed abilities for a restricted model.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection $restrictedModel
+     */
+    public function getAbilitiesForRestrictedModel($restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->getAbilitiesForRestrictedModel($this, true, $restrictedModel);
+    }
+
+    /**
+     * Get all of the model's forbidden abilities for a restricted model.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection $restrictedModel
+     */
+    public function getForbiddenAbilitiesForRestrictedModel($restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->getAbilitiesForRestrictedModel($this, false, $restrictedModel);
+    }
+
+    /**
      * Give an ability to the model.
      *
      * @param  mixed  $ability
