@@ -90,9 +90,10 @@ class ChecksRoles
      * Check if the authority has any of the given roles for this restricted model.
      *
      * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function aRestricted($roles, Model $restrictedModel)
+    public function aRestricted($roles, $restrictedModel)
     {
         return $this->clipboard->checkRole(
             $this->authority, 
@@ -106,9 +107,10 @@ class ChecksRoles
      * Alias to the "aRestricted" method..
      *
      * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function anRestricted($roles, Model $restrictedModel)
+    public function anRestricted($roles, $restrictedModel)
     {
         return $this->aRestricted($roles, $restrictedModel);
     }
@@ -116,10 +118,11 @@ class ChecksRoles
     /**
      * Check if the authority doesn't have any of the given roles for this restricted model.
      *
-     * @param  string  ...$roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function notARestricted($roles, Model $restrictedModel)
+    public function notARestricted($roles, $restrictedModel)
     {
         return $this->clipboard->checkRole(
             $this->authority, 
@@ -133,9 +136,10 @@ class ChecksRoles
      * Alias to the "notARestricted" method..
      *
      * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function notAnRestricted($roles, Model $restrictedModel)
+    public function notAnRestricted($roles, $restrictedModel)
     {
         return $this->notARestricted($roles, $restrictedModel);
     }
@@ -144,9 +148,10 @@ class ChecksRoles
      * Check if the authority has all of the given roles for this restricted model.
      *
      * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function allRestricted($roles, Model $restrictedModel)
+    public function allRestricted($roles, $restrictedModel)
     {
         return $this->clipboard->checkRole(
             $this->authority, 

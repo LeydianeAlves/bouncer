@@ -3,6 +3,7 @@
 namespace Silber\Bouncer\Database\Concerns;
 
 use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Silber\Bouncer\Conductors\AssignsRoles;
 use Silber\Bouncer\Conductors\RemovesRoles;
@@ -37,7 +38,7 @@ trait HasRoles
             Models::classname(Role::class),
             'entity',
             Models::table('assigned_roles')
-        )->withPivot('scope');
+        )->withPivot(['restricted_to_id', 'restricted_to_type', 'scope']);
 
         return Models::scope()->applyToRelation($relation);
     }
@@ -55,14 +56,28 @@ trait HasRoles
     }
 
     /**
+     * Get all of the model's assigned roles for model.
+     *
+     * @param Model|string $restrictedModel
+     * @return \Illuminate\Support\Collection
+     */
+    public function getRolesForRestrictedModel($restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->getRolesForRestrictedModel($this, $restrictedModel);
+    }
+
+    /**
      * Assign the given roles to the model.
      *
      * @param  \Illuminate\Database\Eloquent\Model|string|array  $roles
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return $this
      */
-    public function assign($roles)
+    public function assign($roles, $restrictedModel = null)
     {
-        (new AssignsRoles($roles))->to($this);
+        (new AssignsRoles($roles))->to($this, $restrictedModel);
 
         return $this;
     }
@@ -71,11 +86,12 @@ trait HasRoles
      * Retract the given roles from the model.
      *
      * @param  \Illuminate\Database\Eloquent\Model|string|array  $roles
+     * @param  \Illuminate\Database\Eloquent\Model|null  $restrictedModel
      * @return $this
      */
-    public function retract($roles)
+    public function retract($roles, $restrictedModel = null)
     {
-        (new RemovesRoles($roles))->from($this);
+        (new RemovesRoles($roles))->from($this, $restrictedModel);
 
         return $this;
     }
@@ -143,6 +159,86 @@ trait HasRoles
         return Container::getInstance()
             ->make(Clipboard::class)
             ->checkRole($this, $roles, 'and');
+    }
+
+    /**
+     * Check if the model has any of the given roles for this restrictedModel.
+     *
+     * @param  array  $roles
+     * @return bool
+     */
+    public function isAnRestricted($roles, Model $restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->checkRole(
+                $this, 
+                Helpers::toArray($roles), 
+                'or', 
+                $restrictedModel
+            );
+    }
+
+    /**
+     * Check if the model has any of the given roles for this restricted model.
+     *
+     * Alias for the "isAnRestricted" method.
+     * 
+     * @param  array  $roles
+     * @return bool
+     */
+    public function isARestricted($roles, Model $restrictedModel)
+    {
+        return $this->isAnRestricted($roles, $restrictedModel);
+    }
+
+    /**
+     * Check if the model has none of the given roles for this restricted model.
+     *
+     * @param  array  $roles
+     * @return bool
+     */
+    public function isNotAnRestricted($roles, Model $restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->checkRole(
+                $this, 
+                Helpers::toArray($roles), 
+                'not', 
+                $restrictedModel
+            );
+    }
+
+    /**
+     * Check if the model has none of the given roles for this restricted model.
+     *
+     * Alias for the "isNotAnRestricted" method.
+     * 
+     * @param  array  $roles
+     * @return bool
+     */
+    public function isNotARestricted($roles, Model $restrictedModel)
+    {
+        return $this->isAnRestricted($roles, $restrictedModel);
+    }
+
+     /**
+     * Check if the model has all of the given roles for this restricted model.
+     *
+     * @param  string  ...$roles
+     * @return bool
+     */
+    public function isAllRestricted($roles, Model $restrictedModel)
+    {
+        return Container::getInstance()
+            ->make(Clipboard::class)
+            ->checkRole(
+                $this, 
+                Helpers::toArray($roles), 
+                'all', 
+                $restrictedModel
+            );
     }
 
     /**
