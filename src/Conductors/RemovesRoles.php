@@ -48,7 +48,7 @@ class RemovesRoles
         }
 
         $authorities = is_array($authority) ? $authority : [$authority];
-        $restrictions = RolesForRestriction::getRestrictions($restrictedModels);
+        $restrictions = $this->getRestrictions($restrictedModels);
 
         foreach (Helpers::mapAuthorityByClass($authorities) as $class => $keys) {
             $this->retractRoles($roleIds, $class, $keys, $restrictions);

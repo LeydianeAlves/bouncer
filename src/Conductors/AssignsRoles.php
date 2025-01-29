@@ -33,10 +33,10 @@ class AssignsRoles
      * Assign the roles to the given authority.
      *
      * @param  \Illuminate\Database\Eloquent\Model|array|int  $authority
-     * @param  \Illuminate\Database\Eloquent\Model|array|null  $restrictedModels
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return \Silber\Bouncer\Conductors\Lazy\ConductsAssignment|bool
      */
-    public function to($authority, $restrictedModels = null)
+    public function to($authority, $restrictedModel = null)
     {
         if ($this->shouldConductLazy(...func_get_args())) {
             return $this->conductLazyTo($authority);
@@ -46,7 +46,7 @@ class AssignsRoles
 
         $roles = Models::role()->findOrCreateRoles($this->roles);
 
-        $restrictions = RolesForRestriction::getRestrictions($restrictedModels);
+        $restrictions = $this->getRestrictions($restrictedModel);
 
         foreach (Helpers::mapAuthorityByClass($authorities) as $class => $ids) {
             $this->assignRoles(
@@ -100,7 +100,7 @@ class AssignsRoles
             ->where('entity_type', $morphType);
 
         Models::scope()->applyToRelationQuery($query, $query->from);
-        RolesForRestriction::applyToQuery($query, $restrictions, $query->from);
+        RolesForRestriction::applyRestrictionsToQuery($query, $restrictions, $query->from);
 
         return new Collection($query->get());
     }
