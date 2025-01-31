@@ -109,7 +109,8 @@ abstract class BaseClipboard implements Contracts\Clipboard
     }
 
     /**
-     * Get a list of the authority's abilities.
+     * Get a list of the authority's abilities. This does not include forbidden abilities,
+     * or abilities granted through a restricted role.
      *
      * @param  bool  $allowed
      * @return \Illuminate\Database\Eloquent\Collection
@@ -139,7 +140,7 @@ abstract class BaseClipboard implements Contracts\Clipboard
      */
     public function getAbilitiesForRestrictedModel(Model $authority, $allowed = true, $restrictedModel)
     {
-        return Abilities::restrictedForAuthority($authority, $allowed, $restrictedModel)
+        return Abilities::restrictedForAuthority($authority, $restrictedModel, $allowed)
             ->get();
     }
 

@@ -17,7 +17,7 @@ class Clipboard extends BaseClipboard
      */
     public function checkGetId(Model $authority, $ability, $model = null, $restrictedModel = null)
     {
-        if ($this->isForbidden($authority, $ability, $model, $restrictedModel)) {
+        if ($this->isForbidden($authority, $ability, $model)) {
             return false;
         }
         $ability = $this->getAllowingAbility($authority, $ability, $model, $restrictedModel);
@@ -69,11 +69,10 @@ class Clipboard extends BaseClipboard
      */
     protected function getHasAbilityQuery($authority, $ability, $model, $allowed, $restrictedModel)
     {
-
         // skips the `authority` and `everyone` constraints when checking for a restricted model only
         // if allowed is false, always check all abilities for the user
         $query = $restrictedModel && $allowed
-            ? Abilities::restrictedForAuthority($authority, $allowed, $restrictedModel)
+            ? Abilities::restrictedForAuthority($authority, $restrictedModel, $allowed)
             : Abilities::forAuthority($authority, $allowed);
 
         if (! $this->isOwnedBy($authority, $model)) {

@@ -36,11 +36,11 @@ class Abilities
     /**
      * Get a query for the authority's abilities given for a restricted model.
      *
-     * @param  bool  $allowed
      * @param  Model|string  $restrictedModel
+     * @param  bool  $allowed
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function restrictedForAuthority(Model $authority, $allowed = true, $restrictedModel)
+    public static function restrictedForAuthority(Model $authority, $restrictedModel, $allowed = true)
     {
         return Models::ability()->where(function ($query) use ($authority, $allowed, $restrictedModel) {
             $query->whereExists(static::getRoleConstraint($authority, $allowed, $restrictedModel));
@@ -70,8 +70,8 @@ class Abilities
             Models::scope()->applyToModelQuery($query, $roles);
             Models::scope()->applyToRelationQuery($query, $permissions);
 
-            $query->where(function ($query) use ($authority, $restrictedModel) {
-                $query->whereExists(static::getAuthorityRoleConstraint($authority, $restrictedModel));
+            $query->where(function ($query) use ($authority, $allowed, $restrictedModel) {
+                $query->whereExists(static::getAuthorityRoleConstraint($authority, $allowed, $restrictedModel));
             });
         };
     }
@@ -79,12 +79,16 @@ class Abilities
     /**
      * Get a constraint for roles that are assigned to the given authority.
      *
+     * This method returns a closure that adds constraints to the query for roles
+     * assigned to the specified authority, optionally considering a restricted model.
+     *
+     * @param bool $allowed
      * @param Model|string|null $restrictedModel
      * @return \Closure
      */
-    protected static function getAuthorityRoleConstraint(Model $authority, $restrictedModel)
+    protected static function getAuthorityRoleConstraint(Model $authority, $allowed, $restrictedModel = null)
     {
-        return function ($query) use ($authority, $restrictedModel) {
+        return function ($query) use ($authority, $allowed, $restrictedModel) {
             $pivot = Models::table('assigned_roles');
             $roles = Models::table('roles');
             $table = $authority->getTable();
@@ -98,7 +102,10 @@ class Abilities
             Models::scope()->applyToModelQuery($query, $roles);
             Models::scope()->applyToRelationQuery($query, $pivot);
 
-            RolesForRestriction::constrain($query, $restrictedModel, $pivot);
+            // When checking for allowed abilities, apply restrictions. For forbidden abilities, include all without restrictions.
+            if ($allowed) {
+                RolesForRestriction::constrain($query, $restrictedModel, $pivot);
+            }
         };
     }
 
