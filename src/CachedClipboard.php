@@ -82,7 +82,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         // If so, we'll return false right away, so as to not pass the check. Then,
         // we'll check if any of them have been allowed & return the matched ID.
         $forbiddenId = $this->findMatchingAbility(
-            $this->getForbiddenAbilities($authority, $restrictedModel), 
+            $this->getForbiddenAbilities($authority), 
             $applicable, 
             $model, 
             $authority
@@ -208,7 +208,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         // restriction is passed, we'll only get the abilities that have been granted
         // via this restriction.
         $key = $restrictedModel
-            ? $this->getCacheKey($authority, 'restricted-ability', $allowed, $restrictedModel)
+            ? $this->getCacheKey($authority, 'restricted-abilities', $allowed, $restrictedModel)
             : $this->getCacheKey($authority, 'abilities', $allowed);
 
 
@@ -273,7 +273,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     public function getRolesLookup(Model $authority, $restrictedModel = null)
     {
         $key = $restrictedModel
-            ? $this->getCacheKey($authority, 'restricted-role',  true, $restrictedModel)
+            ? $this->getCacheKey($authority, 'restricted-roles',  true, $restrictedModel)
             : $this->getCacheKey($authority, 'roles');
 
         return $this->sear($key, function () use ($authority, $restrictedModel) {
@@ -325,7 +325,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     public function refreshFor(Model $authority)
     {
         // Find all the cache keys and types for this authority and clear them
-        foreach (['abilities', 'restricted-ability', 'roles', 'restricted-role'] as $type) {
+        foreach (['abilities', 'restricted-abilities', 'roles', 'restricted-roles'] as $type) {
             foreach ($this->cachedKeys as $key) {
                 if (strpos($key, $this->getCacheKey($authority, $type, true) !== false)
                     || strpos($key, $this->getCacheKey($authority, $type, false) !== false)
