@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\Attributes\Test;
 use Silber\Bouncer\CachedClipboard;
 use Silber\Bouncer\Contracts\Clipboard as ClipboardContract;
+use Workbench\App\Models\Account;
 use Workbench\App\Models\User;
 
 class CachedClipboardTest extends BaseTestCase
@@ -35,6 +36,24 @@ class CachedClipboardTest extends BaseTestCase
     }
 
     #[Test]
+    public function it_caches_restricted_abilities()
+    {
+        $bouncer = $this->bouncer($user = User::create());
+        $account = Account::create();
+
+        $bouncer->allow('admin')->to(['ban-users', 'delete-users']);
+        $bouncer->allow($user)->to('view-users');
+
+        $bouncer->assign('admin')->to($user)->for($account);
+        $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
+        $this->assertEquals(['view-users'], $this->getAbilities($user));
+
+
+        $bouncer->allow('admin')->to('create-users');
+        $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
+    }
+
+    #[Test]
     public function it_caches_empty_abilities()
     {
         $user = User::create();
@@ -55,6 +74,22 @@ class CachedClipboardTest extends BaseTestCase
         $bouncer->assign('moderator')->to($user);
 
         $this->assertFalse($bouncer->is($user)->a('moderator'));
+    }
+
+    #[Test]
+    public function it_caches_restricted_roles()
+    {
+        $bouncer = $this->bouncer($user = User::create());
+        $account = Account::create();
+
+        $bouncer->assign('editor')->to($user)->for($account);
+
+        $this->assertTrue($bouncer->is($user)->aRestricted('editor', $account));
+        $this->assertFalse($bouncer->is($user)->a('editor'));
+
+        $bouncer->assign('moderator')->to($user)->for($account);
+
+        $this->assertFalse($bouncer->is($user)->aRestricted('moderator', $account));
     }
 
     #[Test]
@@ -131,5 +166,16 @@ class CachedClipboardTest extends BaseTestCase
     protected function getAbilities(Model $user)
     {
         return $user->getAbilities($user)->pluck('name')->sort()->values()->all();
+    }
+
+    /**
+     * Get the name of all of the user's abilities.
+     *
+     * @return array
+     */
+    protected function getRestrictedAbilities(Model $user, $restrictedModel)
+    {
+        return $user->getAbilitiesForRestrictedModel($restrictedModel)
+            ->pluck('name')->sort()->values()->all();
     }
 }
