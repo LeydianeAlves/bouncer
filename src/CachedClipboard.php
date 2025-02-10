@@ -243,7 +243,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      * @param  Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilitiesForRestrictedModel(Model $authority, $allowed = true, $restrictedModel)
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed = true, $restrictedModel)
    {
         return $this->getAbilities($authority, $allowed, $restrictedModel);
     }
@@ -258,7 +258,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     public function getFreshAbilities(Model $authority, $allowed, $restrictedModel = null)
     {
         if ($restrictedModel) {
-            return parent::getAbilitiesForRestrictedModel($authority, $allowed, $restrictedModel);
+            return parent::getAbilitiesForRoleRestriction($authority, $allowed, $restrictedModel);
         }
     
         return parent::getAbilities($authority, $allowed);
@@ -390,7 +390,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         ];
 
         if ($restrictedModel) {
-            $keys[] = $this->appendRestrictedModelToCacheKey( $restrictedModel);
+            $keys[] = $this->appendRoleRestrictionToCacheKey( $restrictedModel);
         }
 
 
@@ -403,7 +403,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      * @param Model|string $restrictedModel
      * @return string
      */
-    protected function appendRestrictedModelToCacheKey(Model $restrictedModel)
+    protected function appendRoleRestrictionToCacheKey($restrictedModel)
     {
         $class = $restrictedModel->getMorphClass();
         $key = "restricted-to-$class";

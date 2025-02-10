@@ -187,8 +187,8 @@ class AssignsRoles
             .$record['entity_id']
             .$record['entity_type'];
 
-        if (isset($record['restriction_to_id'])) {
-            $hash .= $record['restriction_to_id'];
+        if (isset($record['restricted_to_id'])) {
+            $hash .= $record['restricted_to_id'];
         }
 
         if (isset($record['restricted_to_type'])) {

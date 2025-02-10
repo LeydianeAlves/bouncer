@@ -49,7 +49,7 @@ interface Clipboard
      * @param  Model|string  $restrictedModel
      * @return \Illuminate\Support\Collection
      */
-    public function getRolesForRestrictedModel(Model $authority, $restrictedModel);
+    public function getRolesForRoleRestriction(Model $authority, $restrictedModel);
 
     /**
      * Get a list of the authority's abilities.
@@ -75,5 +75,5 @@ interface Clipboard
      * @param  Model|string  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilitiesForRestrictedModel(Model $authority, $allowed = true, $restrictedModel);
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed = true, $restrictedModel);
 }

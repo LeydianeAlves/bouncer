@@ -72,11 +72,11 @@ trait HasAbilities
      *
      * @return \Illuminate\Database\Eloquent\Collection $restrictedModel
      */
-    public function getAbilitiesForRestrictedModel($restrictedModel)
+    public function getAbilitiesForRoleRestriction($restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->getAbilitiesForRestrictedModel($this, true, $restrictedModel);
+            ->getAbilitiesForRoleRestriction($this, true, $restrictedModel);
     }
 
     /**
@@ -84,11 +84,11 @@ trait HasAbilities
      *
      * @return \Illuminate\Database\Eloquent\Collection $restrictedModel
      */
-    public function getForbiddenAbilitiesForRestrictedModel($restrictedModel)
+    public function getForbiddenAbilitiesForRoleRestriction($restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->getAbilitiesForRestrictedModel($this, false, $restrictedModel);
+            ->getAbilitiesForRoleRestriction($this, false, $restrictedModel);
     }
 
     /**

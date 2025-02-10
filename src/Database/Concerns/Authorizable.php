@@ -47,43 +47,4 @@ trait Authorizable
     {
         return $this->cant($ability, $arguments);
     }
-
-    /**
-     * Determine if the authority has a given ability for the restricted  model.
-     *
-     * @param  string  $ability
-     * @param  \Illuminate\Database\Eloquent\Model  $restrictedModel
-     * @param  \Illuminate\Database\Eloquent\Model|null  $model
-     * @return bool
-     */
-    public function canForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->can($ability, [$model, $restrictedModel]);
-    }
-
-    /**
-     * Determine if the authority does not have a given ability for the restricted role model.
-     *
-     * @param  string  $ability
-     * @param  \Illuminate\Database\Eloquent\Model  $restrictedModel
-     * @param  \Illuminate\Database\Eloquent\Model|null  $model
-     * @return bool
-     */
-    public function cantForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->cant($ability, [$model, $restrictedModel]);
-    }
-
-    /**
-     * Determine if the authority does not have a given ability for the restricted role model.
-     *
-     * @param  string  $ability
-     * @param  \Illuminate\Database\Eloquent\Model  $restrictedModel
-     * @param  \Illuminate\Database\Eloquent\Model|null  $model
-     * @return bool
-     */
-    public function cannotForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->cannot($ability, [$model, $restrictedModel]);
-    }
 }

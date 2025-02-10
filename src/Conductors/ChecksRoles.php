@@ -87,77 +87,65 @@ class ChecksRoles
     }
 
     /**
-     * Check if the authority has any of the given roles for this restricted model.
+     * Check if the authority has any of the given roles for the given model.
      *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function aRestricted($roles, $restrictedModel)
+    public function aFor($roles, $restrictedModel)
     {
-        return $this->clipboard->checkRole(
-            $this->authority, 
-            Helpers::toArray($roles), 
-            'or', 
-            $restrictedModel
-        );
+        return $this->clipboard
+            ->checkRole($this->authority,  Helpers::toArray($roles), 'or', $restrictedModel);
     }
 
     /**
-     * Alias to the "aRestricted" method..
+     * Alias to the "isAFor" method..
      *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function anRestricted($roles, $restrictedModel)
+    public function anFor($roles, $restrictedModel)
     {
-        return $this->aRestricted($roles, $restrictedModel);
+        return $this->aFor($roles, $restrictedModel,);
     }
 
     /**
-     * Check if the authority doesn't have any of the given roles for this restricted model.
+     * Check if the authority doesn't have any of the given roles for the given model.
      *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function notARestricted($roles, $restrictedModel)
+    public function notAFor($roles, $restrictedModel)
     {
-        return $this->clipboard->checkRole(
-            $this->authority, 
-            Helpers::toArray($roles), 
-            'not', 
-            $restrictedModel
-        );
+        return $this->clipboard
+            ->checkRole($this->authority, Helpers::toArray($roles), 'not', $restrictedModel);
     }
 
    /**
-     * Alias to the "notARestricted" method..
+     * Alias to the "isNotAFor" method..
      *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function notAnRestricted($roles, $restrictedModel)
+    public function notAnFor($roles, $restrictedModel)
     {
-        return $this->notARestricted($roles, $restrictedModel);
+        return $this->notAFor($roles, $restrictedModel);
     }
 
     /**
-     * Check if the authority has all of the given roles for this restricted model.
+     * Check if the authority has all of the given roles for the given model.
      *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function allRestricted($roles, $restrictedModel)
+    public function allFor($roles, $restrictedModel)
     {
-        return $this->clipboard->checkRole(
-            $this->authority, 
-            Helpers::toArray($roles), 
-            'and', 
-            $restrictedModel
-        );
+        return $this->clipboard
+            ->checkRole($this->authority, Helpers::toArray($roles), 'and', $restrictedModel);
     }
 }

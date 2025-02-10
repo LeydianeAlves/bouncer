@@ -423,60 +423,6 @@ class Bouncer
         return $this->cannot($ability, $arguments);
     }
 
-     /**
-     * Determine if the given ability should be granted for the current user for a restricted model on a role.
-     *
-     * @param  string  $ability
-     * @param  Model|string  $restrictedModel
-     * @param  Model|string|null  $model
-     * @return \Illuminate\Auth\Access\Response
-     *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     */
-    public function authorizeForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->gate()->authorize($ability, [$model, $restrictedModel]);
-    }
-
-    /**
-     * Determine if the given ability is allowed for a restricted model on a role.
-     *
-     * @param  string  $ability
-     * @param  Model|string  $restrictedModel
-     * @param  Model|string|null  $model
-     * @return bool
-     */
-    public function canForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->gate()->allows($ability, [$model, $restrictedModel]);
-    }
-
-    /**
-     * Determine if any of the given abilities are allowed for a restricted model on a role.
-     *
-     * @param  array  $abilities
-     * @param  Model|string  $restrictedModel
-     * @param  Model|string|null  $model
-     * @return bool
-     */
-    public function canAnyForRestrictedModel($abilities, $restrictedModel, $model = null)
-    {
-        return $this->gate()->any($abilities, [$model, $restrictedModel]);
-    }
-
-    /**
-     * Determine if the given ability is denied for a restricted model on a role.
-     *
-     * @param  string  $ability
-     * @param  Model|string  $restrictedModel
-     * @param  Model|string|null  $model
-     * @return bool
-     */
-    public function cannotForRestrictedModel($ability, $restrictedModel, $model = null)
-    {
-        return $this->gate()->denies($ability, [$model, $restrictedModel]);
-    }
-
     /**
      * Get an instance of the role model.
      *

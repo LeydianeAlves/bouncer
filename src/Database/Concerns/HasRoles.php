@@ -61,11 +61,11 @@ trait HasRoles
      * @param Model|string $restrictedModel
      * @return \Illuminate\Support\Collection
      */
-    public function getRolesForRestrictedModel($restrictedModel)
+    public function getRolesForRoleRestriction($restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->getRolesForRestrictedModel($this, $restrictedModel);
+            ->getRolesForRoleRestriction($this, $restrictedModel);
     }
 
     /**
@@ -162,83 +162,73 @@ trait HasRoles
     }
 
     /**
-     * Check if the model has any of the given roles for this restrictedModel.
+     * Check if the model has any of the given roles for the given model.
      *
-     * @param  array  $roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function isAnRestricted($roles, Model $restrictedModel)
+    public function isAFor($roles, $restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->checkRole(
-                $this, 
-                Helpers::toArray($roles), 
-                'or', 
-                $restrictedModel
-            );
+            ->checkRole($this, Helpers::toArray($roles), 'or', $restrictedModel);
     }
 
     /**
-     * Check if the model has any of the given roles for this restricted model.
+     * Check if the model has any of the given roles for the given model.
      *
-     * Alias for the "isAnRestricted" method.
+     * Alias for the "isAFor" method.
      * 
-     * @param  array  $roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function isARestricted($roles, Model $restrictedModel)
+    public function isAnFor($roles, $restrictedModel)
     {
-        return $this->isAnRestricted($roles, $restrictedModel);
+        return $this->isAFor($roles, $restrictedModel);
     }
 
     /**
-     * Check if the model has none of the given roles for this restricted model.
+     * Check if the model has none of the given roles for the given model.
      *
-     * @param  array  $roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function isNotAnRestricted($roles, Model $restrictedModel)
+    public function isNotAFor($roles, $restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->checkRole(
-                $this, 
-                Helpers::toArray($roles), 
-                'not', 
-                $restrictedModel
-            );
+            ->checkRole($this, Helpers::toArray($roles), 'not', $restrictedModel);
     }
 
     /**
-     * Check if the model has none of the given roles for this restricted model.
+     * Check if the model has none of the given roles for the given model.
      *
-     * Alias for the "isNotAnRestricted" method.
+     * Alias for the "isNotAFor" method.
      * 
-     * @param  array  $roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function isNotARestricted($roles, Model $restrictedModel)
+    public function isNotAnFor($roles, $restrictedModel)
     {
-        return $this->isAnRestricted($roles, $restrictedModel);
+        return $this->isNotAFor($roles, $restrictedModel);
     }
 
      /**
-     * Check if the model has all of the given roles for this restricted model.
+     * Check if the model has all of the given roles for the given model.
      *
-     * @param  string  ...$roles
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
      * @return bool
      */
-    public function isAllRestricted($roles, Model $restrictedModel)
+    public function isAllFor($roles, $restrictedModel)
     {
         return Container::getInstance()
             ->make(Clipboard::class)
-            ->checkRole(
-                $this, 
-                Helpers::toArray($roles), 
-                'all', 
-                $restrictedModel
-            );
+            ->checkRole($this, Helpers::toArray($roles), 'all', $restrictedModel);
     }
 
     /**

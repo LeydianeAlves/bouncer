@@ -10,6 +10,7 @@ class RolesForRestriction
 {
     /**
      * Constrain a query to a global role or restricted to a model.
+     * If a model is passed, global roles are excluded
      *
      * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder  $query
      * @param  \Illuminate\Database\Eloquent\Model|null  $restrictedModel
@@ -21,7 +22,7 @@ class RolesForRestriction
             return self::constrainToGlobalRoles($query, $table);
         }
         return $query->where(function ($query) use ($restrictedModel, $table) {
-            return $query->where(self::constrainRoleToRestrictedModel($restrictedModel, $table));
+            return $query->where(self::constrainRoleToRoleRestriction($restrictedModel, $table));
         });
     }
 
@@ -44,7 +45,7 @@ class RolesForRestriction
      * @param  string  $table
      * @return \Closure
      */
-    protected static function constrainRoleToRestrictedModel(Model $restrictedModel, $table)
+    protected static function constrainRoleToRoleRestriction(Model $restrictedModel, $table)
     {
         return function ($query) use ($restrictedModel, $table) {
             $query->where("$table.restricted_to_type", $restrictedModel->getMorphClass());
@@ -83,8 +84,7 @@ class RolesForRestriction
      */
     public static function applyRestrictionsToQuery($query, $restrictions, $table = '')
     {
-        if ( !empty($restrictedModels)) {
-                
+        if ( !empty($restrictions)) {
             [$models, $strings] = self::partitionTypes($restrictions);
 
             $restrictionIds = Helpers::mapItemsBy($models, 'getKey')->all();

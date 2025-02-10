@@ -101,7 +101,7 @@ abstract class BaseClipboard implements Contracts\Clipboard
      * @param Model|string|null $restrictedModel
      * @return \Illuminate\Support\Collection
      */
-    public function getRolesForRestrictedModel(Model $authority, $restrictedModel)
+    public function getRolesForRoleRestriction(Model $authority, $restrictedModel)
     {
         return $this->getRolesLookup($authority, $restrictedModel)
             ['names']
@@ -138,7 +138,7 @@ abstract class BaseClipboard implements Contracts\Clipboard
      * @param  \Illuminate\Database\Eloquent\Model|string  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilitiesForRestrictedModel(Model $authority, $allowed = true, $restrictedModel)
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed = true, $restrictedModel)
     {
         return Abilities::restrictedForAuthority($authority, $restrictedModel, $allowed)
             ->get();
