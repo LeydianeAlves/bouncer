@@ -142,13 +142,13 @@ class BouncerSimpleTest extends BaseTestCase
         
         $bouncer->assign('admin')->to($user1)->for($account1);
 
-        $this->assertTrue($bouncer->canForRestrictedModel('ban-users', $account1));
+        $this->assertTrue($bouncer->can('ban-users', [null, $account1]));
         $this->assertTrue($bouncer->cannot('ban-users'));
-        $this->assertTrue($bouncer->cannotForRestrictedModel('ban-users', Account::create()));
+        $this->assertTrue($bouncer->cannot('ban-users', [null, Account::create()]));
 
         $bouncer->retract('admin')->from($user1)->for($account1);
 
-        $this->assertFalse($bouncer->canForRestrictedModel('ban-users', $account1));
+        $this->assertFalse($bouncer->can('ban-users', [null, $account1]));
     }
 
     #[Test]
@@ -162,13 +162,13 @@ class BouncerSimpleTest extends BaseTestCase
 
         $bouncer->assign(['admin', 'viewer'])->to($user)->for([$account1, $account2]);
 
-        $this->assertTrue($bouncer->is($user)->allRestricted(['admin', 'viewer'], $account1));
-        $this->assertTrue($bouncer->is($user)->allRestricted(['admin', 'viewer'], $account2));
+        $this->assertTrue($bouncer->is($user)->allFor(['admin', 'viewer'], $account1));
+        $this->assertTrue($bouncer->is($user)->allFor(['admin', 'viewer'], $account2));
   
         $bouncer->retract(['admin', 'viewer'])->from($user)->for([$account1, $account2]);
 
-        $this->assertTrue($bouncer->is($user)->notARestricted(['admin', 'viewer'], $account1));
-        $this->assertTrue($bouncer->is($user)->notARestricted(['admin', 'viewer'], $account2));
+        $this->assertTrue($bouncer->is($user)->notAFor(['admin', 'viewer'], $account1));
+        $this->assertTrue($bouncer->is($user)->notAFor(['admin', 'viewer'], $account2));
     } 
 
     #[Test]
@@ -236,15 +236,15 @@ class BouncerSimpleTest extends BaseTestCase
 
         $bouncer->assign(['admin', 'editor'])->to([$user1, $user2])->for($account);
 
-        $this->assertTrue($bouncer->is($user1)->allRestricted(['admin', 'editor'], $account));
-        $this->assertTrue($bouncer->is($user2)->anRestricted(['admin', 'editor'], $account));
+        $this->assertTrue($bouncer->is($user1)->allFor(['admin', 'editor'], $account));
+        $this->assertTrue($bouncer->is($user2)->aFor(['admin', 'editor'], $account));
 
         $bouncer->retract('admin')->from($user1)->for($account);
         $bouncer->retract(collect(['admin', 'editor']))->from($user2)->for($account);
 
-        $this->assertTrue($bouncer->is($user1)->notAnRestricted('admin', $account));
-        $this->assertTrue($bouncer->is($user1)->anRestricted('editor', $account));
-        $this->assertTrue($bouncer->is($user1)->anRestricted(['admin', 'editor'], $account));
+        $this->assertTrue($bouncer->is($user1)->notAnFor('admin', $account));
+        $this->assertTrue($bouncer->is($user1)->anFor('editor', $account));
+        $this->assertTrue($bouncer->is($user1)->anFor(['admin', 'editor'], $account));
     }
 
     #[Test]
@@ -254,6 +254,18 @@ class BouncerSimpleTest extends BaseTestCase
 
         $bouncer->assign('admin')->to($user);
         $bouncer->assign('admin')->to($user);
+
+        $this->assertCount(1, $user->roles);
+    }
+
+    #[Test]
+    public function can_ignore_duplicate_restricted_role_assignments()
+    {
+        $bouncer = $this->bouncer($user = User::create());
+        $account = Account::create();
+
+        $bouncer->assign('admin')->to($user)->for($account);
+        $bouncer->assign('admin')->to($user)->for($account);
 
         $this->assertCount(1, $user->roles);
     }
@@ -326,6 +338,26 @@ class BouncerSimpleTest extends BaseTestCase
         $this->assertTrue($bouncer->is($user)->all('editor', 'moderator'));
         $this->assertFalse($bouncer->is($user)->notAn('editor', 'moderator'));
         $this->assertFalse($bouncer->is($user)->all('admin', 'moderator'));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_check_user_roles_for_a_restricted_role($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+
+        $this->assertTrue($bouncer->is($user)->notAFor('moderator', $account));
+        $this->assertTrue($bouncer->is($user)->notAnFor('editor', $account));
+        $this->assertFalse($bouncer->is($user)->anFor('admin', $account));
+
+        $bouncer->assign('moderator')->to($user)->for($account);
+        $bouncer->assign('editor')->to($user)->for($account);
+
+        $this->assertTrue($bouncer->is($user)->aFor('moderator', $account));
+        $this->assertTrue($bouncer->is($user)->anFor('editor', $account));
+        $this->assertFalse($bouncer->is($user)->notAnFor('editor', $account));
+        $this->assertFalse($bouncer->is($user)->anFor('admin', $account));
     }
 
     #[Test]

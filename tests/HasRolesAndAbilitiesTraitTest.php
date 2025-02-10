@@ -62,24 +62,19 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $account = Account::create();
 
         $bouncer->allow('admin')->to('edit-site');
-        $bouncer->allow('viewer')->to('view', Account::class);
+        $bouncer->allow('viewer')->to('view', $account);
         $bouncer->allow($user)->to('create-accounts');
 
         $bouncer->assign(['admin', 'viewer'])->to($user)->for($account);
 
-        $bouncer->forbid($user)->to('create-sites');
-        $bouncer->forbid('viewer')->to('view', $account);
-
-        // todo: Should getAbilitiesForRestrictedModel return abilities that have been made forbidden globally?
-        // with the below it does  
         $this->assertEquals(
             ['edit-site', 'view'],
-            $user->getAbilitiesForRestrictedModel($account)->pluck('name')->sort()->values()->all()
+            $user->getAbilitiesForRoleRestriction($account)->pluck('name')->sort()->values()->all()
         );
 
         $this->assertEquals(
-            ['view'],
-            $user->getForbiddenAbilitiesForRestrictedModel($account)->pluck('name')->sort()->values()->all()
+            ['create-accounts'],
+            $user->getAbilities()->pluck('name')->sort()->values()->all()
         );
     }
 
@@ -97,14 +92,13 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $bouncer->allow($user)->to('create-sites');
 
         $this->assertEquals(
-            ['create-posts'],
+            ['create-posts', 'edit-site'],
             $user->getForbiddenAbilities()->pluck('name')->sort()->values()->all()
         );
 
-        // dd($user->getForbiddenAbilitiesForRestrictedModel($account)->pluck('name')->sort()->values()->all());
         $this->assertEquals(
             ['edit-site'],
-            $user->getForbiddenAbilitiesForRestrictedModel($account)
+            $user->getForbiddenAbilitiesForRoleRestriction($account)
                 ->pluck('name')->sort()->values()->all()
         );
     }
@@ -240,9 +234,8 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $bouncer->allow('admin')->to('view', Account::class);
 
         $user->assign('admin', $account);
-        // dd($user->getRoles()->all());
    
-        $this->assertEquals(['admin'], $user->getRolesForRestrictedModel($account)->all());
+        $this->assertEquals(['admin'], $user->getRolesForRoleRestriction($account)->all());
 
         $this->assertTrue($bouncer->can('edit-site', [null, $account]));
         $this->assertTrue($bouncer->cannot('edit-site'));
@@ -270,15 +263,15 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
 
         $user->assign(['admin', 'viewer'], [$account, $account2]);
     
-        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRestrictedModel($account)->all());
-        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRestrictedModel($account2)->all());
+        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account)->all());
+        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account2)->all());
 
         $this->assertTrue($bouncer->can('view', [Account::class, $account]));
         $this->assertTrue($bouncer->can('view', [Account::class, $account2]));
 
         $user->retract('admin', [$account, $account2]);
 
-        $this->assertEquals(['viewer'], $user->getRolesForRestrictedModel($account)->all());
+        $this->assertEquals(['viewer'], $user->getRolesForRoleRestriction($account)->all());
         $this->assertTrue($bouncer->cannot('view', [Account::class, $account]));
         $this->assertTrue($bouncer->cannot('view', [Account::class, $account2]));
     }
@@ -327,19 +320,19 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         [$bouncer, $user] = $provider();
         $account = Account::create();
 
-        $this->assertFalse($user->isAn('admin', 'editor'));
+        $this->assertFalse($user->isA('admin', 'editor'));
 
         $user->assign('moderator', $account);
         $user->assign('editor', $account);
 
-        $this->assertFalse($user->isAn('admin', 'moderator'));
-        $this->assertTrue($user->isAnRestricted(['admin', 'moderator'], $account));
+        $this->assertFalse($user->isA('admin', 'moderator'));
+        $this->assertTrue($user->isAFor(['admin', 'moderator'], $account));
 
         $this->assertFalse($user->isAll('editor', 'moderator'));
-        $this->assertTrue($user->isAllRestricted(['editor', 'moderator'], $account));
+        $this->assertTrue($user->isAllFor(['editor', 'moderator'], $account));
 
         // $this->assertFalse($user->isAll('moderator', 'admin'));
-        $this->assertFalse($user->isAllRestricted(['moderator', 'admin'], $account));
+        $this->assertFalse($user->isAllFor(['moderator', 'admin'], $account));
     }
 
     #[Test]

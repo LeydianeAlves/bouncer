@@ -21,10 +21,8 @@ class RoleRestrictionsTest extends BaseTestCase
         $bouncer->assign(['admin', 'moderator'])->to($user)->for($account);
 
         $this->AssertTrue($user->roles()->count() === 2);
-        
         $record = $user->roles()->first();
-        // dd($user->roles()->get());
-        // dd($record->pivot->restricted_to_type);
+
         $this->assertEquals($account->getMorphClass(), $record->pivot->restricted_to_type);
         $this->assertNull($record->pivot->restricted_to_id);
     }
@@ -53,9 +51,9 @@ class RoleRestrictionsTest extends BaseTestCase
         $user->assign('admin', $account);
         $bouncer->assign('moderator')->to($user)->for($account);
 
-        $this->assertTrue($user->isNotAn('admin', 'moderator'), $account);
-        $this->assertTrue($user->isAnRestricted('admin', $account));
-        $this->assertTrue($bouncer->is($user)->aRestricted('moderator', $account));
+        $this->assertTrue($user->isNotA('admin', 'moderator'));
+        $this->assertTrue($user->isAnFor('admin', $account));
+        $this->assertTrue($bouncer->is($user)->aFor('moderator', $account));
     }
 
     #[Test]
@@ -69,13 +67,13 @@ class RoleRestrictionsTest extends BaseTestCase
         $user->assign('admin', [$account1, $account2]);
         $user->assign('editor', [$account1, $account2]);
 
-        $this->assertTrue($user->isAllRestricted(['admin', 'editor'], $account1));
-        $this->assertTrue($user->isAllRestricted(['admin', 'editor'], $account2));
+        $this->assertTrue($user->isAllFor(['admin', 'editor'], $account1));
+        $this->assertTrue($user->isAllFor(['admin', 'editor'], $account2));
 
         $bouncer->retract('admin')->from($user)->for([$account1, $account2]);
 
-        $this->assertTrue($user->isNotAnRestricted('admin', $account1));
-        $this->assertTrue($user->isNotAnRestricted('admin', $account2));
+        $this->assertTrue($user->isNotAnFor('admin', $account1));
+        $this->assertTrue($user->isNotAnFor('admin', $account2));
     }
 
     #[Test]
@@ -86,12 +84,13 @@ class RoleRestrictionsTest extends BaseTestCase
         $account = Account::create();
 
         $user->assign(['admin', 'viewer'], $account);
-        $this->assertTrue($bouncer->is($user)->anRestricted('admin', $account));
-        $this->assertTrue($bouncer->is($user)->aRestricted('viewer', $account));
-        $this->assertTrue($bouncer->is($user)->allRestricted(['admin', 'viewer'], $account));
 
-        $this->assertTrue($bouncer->is($user)->notAnRestricted('moderator', $account));
-        $this->assertTrue($bouncer->is($user)->notARestricted('superadmin', $account));
+        $this->assertTrue($bouncer->is($user)->anFor('admin', $account));
+        $this->assertTrue($bouncer->is($user)->aFor('viewer', $account));
+        $this->assertTrue($bouncer->is($user)->allFor(['admin', 'viewer'], $account));
+
+        $this->assertTrue($bouncer->is($user)->notAnFor('moderator', $account));
+        $this->assertTrue($bouncer->is($user)->notAFor('superadmin', $account));
 
     }
 
@@ -108,14 +107,10 @@ class RoleRestrictionsTest extends BaseTestCase
         $bouncer->allow('admin')->to('view', User::class);
         $bouncer->allow('admin')->to('edit-site');
         
-        $this->assertFalse($bouncer->canForRestrictedModel('edit', $account));
-        $this->assertTrue($bouncer->canForRestrictedModel('view', $account, Account::class));
-        $this->assertTrue($bouncer->canAnyForRestrictedModel(['edit', 'view'], $account, Account::class));
-        $this->assertTrue($bouncer->cannotForRestrictedModel('delete', $account));
-        $this->assertTrue($bouncer->cannotForRestrictedModel('delete', $account, Account::class));
+        $this->assertFalse($bouncer->can('edit', [null, $account]));
+        $this->assertTrue($bouncer->can('view', [Account::class, $account]));
+        $this->assertTrue($bouncer->canAny(['edit', 'view'], [Account::class, $account]));
+        $this->assertTrue($bouncer->cannot('delete', [null, $account]));
+        $this->assertTrue($bouncer->cannot('delete', [Account::class, $account]));
     }
-
-    // test assigning for class types onyl
-       // - for one one type
-       //  - for multiple types in arraay
 }
