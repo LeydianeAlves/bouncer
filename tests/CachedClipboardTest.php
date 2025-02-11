@@ -46,9 +46,9 @@ class CachedClipboardTest extends BaseTestCase
 
         $bouncer->assign('admin')->to($user)->for($account);
         $bouncer->assign('viewer')->to($user);
+        
         $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
-        $this->assertEquals(['view-users'], $this->getAbilities($user));
-
+        $this->assertEquals(['ban-users', 'delete-users','view-users'], $this->getAbilities($user));
 
         $bouncer->allow('admin')->to('create-users');
         $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
@@ -86,7 +86,7 @@ class CachedClipboardTest extends BaseTestCase
         $bouncer->assign('editor')->to($user)->for($account);
 
         $this->assertTrue($bouncer->is($user)->aFor( 'editor', $account));
-        $this->assertFalse($bouncer->is($user)->a('editor'));
+        $this->assertTrue($bouncer->is($user)->a('editor'));
 
         $bouncer->assign('moderator')->to($user)->for($account);
 
@@ -157,6 +157,13 @@ class CachedClipboardTest extends BaseTestCase
 
         $this->assertEquals([], $this->getAbilities($user1));
         $this->assertEquals(['ban-users'], $this->getAbilities($user2));
+
+        $bouncer->refreshFor($user1);
+
+        $bouncer->retract('admin')->from($user1);
+        $this->assertFalse($user1->isAn('admin'));
+        $this->assertCount(0, $user1->getRoles());
+        $this->assertCount(1, $user2->getRoles());
     }
 
     /**

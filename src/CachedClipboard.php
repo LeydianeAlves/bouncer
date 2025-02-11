@@ -257,7 +257,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      */
     public function getFreshAbilities(Model $authority, $allowed, $restrictedModel = null)
     {
-        if ($restrictedModel) {
+        if ($restrictedModel && $allowed) {
             return parent::getAbilitiesForRoleRestriction($authority, $allowed, $restrictedModel);
         }
     

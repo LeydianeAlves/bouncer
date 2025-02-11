@@ -142,8 +142,8 @@ class BouncerSimpleTest extends BaseTestCase
         
         $bouncer->assign('admin')->to($user1)->for($account1);
 
+        $this->assertTrue($bouncer->can('ban-users'));
         $this->assertTrue($bouncer->can('ban-users', [null, $account1]));
-        $this->assertTrue($bouncer->cannot('ban-users'));
         $this->assertTrue($bouncer->cannot('ban-users', [null, Account::create()]));
 
         $bouncer->retract('admin')->from($user1)->for($account1);

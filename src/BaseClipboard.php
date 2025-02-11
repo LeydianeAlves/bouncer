@@ -76,9 +76,13 @@ abstract class BaseClipboard implements Contracts\Clipboard
      */
     public function getRolesLookup(Model $authority, $restrictedModel = null)
     {
-        $roles = $authority
-            ->roles()
-            ->for($restrictedModel)
+        $roles = $authority->roles();
+        
+        if ($restrictedModel) {
+            $roles->for($restrictedModel);
+        }
+
+        $roles = $roles
             ->get(['name', Models::role()->getQualifiedKeyName()])
             ->pluck('name', Models::role()->getKeyName());
      

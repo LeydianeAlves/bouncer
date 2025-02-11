@@ -103,7 +103,7 @@ class Abilities
             Models::scope()->applyToRelationQuery($query, $pivot);
 
             // When checking for allowed abilities, apply restrictions. For forbidden abilities, include all without restrictions.
-            if ($allowed) {
+            if ($restrictedModel) {
                 RolesForRestriction::constrain($query, $restrictedModel, $pivot);
             }
         };

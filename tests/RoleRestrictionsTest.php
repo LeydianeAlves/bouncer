@@ -51,7 +51,7 @@ class RoleRestrictionsTest extends BaseTestCase
         $user->assign('admin', $account);
         $bouncer->assign('moderator')->to($user)->for($account);
 
-        $this->assertTrue($user->isNotA('admin', 'moderator'));
+        $this->assertTrue($user->isAn('admin', 'moderator'));
         $this->assertTrue($user->isAnFor('admin', $account));
         $this->assertTrue($bouncer->is($user)->aFor('moderator', $account));
     }

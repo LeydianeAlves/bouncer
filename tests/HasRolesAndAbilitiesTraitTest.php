@@ -30,7 +30,7 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $bouncer->allow('editor')->to('edit-posts');
 
         $this->assertEquals(
-            ['create-posts', 'edit-site'],
+            ['ban-users', 'create-posts', 'edit-site'],
             $user->getAbilities()->pluck('name')->sort()->values()->all()
         );
     }
@@ -73,7 +73,7 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         );
 
         $this->assertEquals(
-            ['create-accounts'],
+            ['create-accounts', 'edit-site', 'view'],
             $user->getAbilities()->pluck('name')->sort()->values()->all()
         );
     }
@@ -238,7 +238,7 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $this->assertEquals(['admin'], $user->getRolesForRoleRestriction($account)->all());
 
         $this->assertTrue($bouncer->can('edit-site', [null, $account]));
-        $this->assertTrue($bouncer->cannot('edit-site'));
+        $this->assertTrue($bouncer->can('edit-site'));
 
         $this->assertTrue($bouncer->can('view', [Account::class, $account]));
         $this->assertTrue($bouncer->cannot('view', [null, $account]));
@@ -325,13 +325,12 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $user->assign('moderator', $account);
         $user->assign('editor', $account);
 
-        $this->assertFalse($user->isA('admin', 'moderator'));
+        $this->assertTrue($user->isA('admin', 'moderator'));
         $this->assertTrue($user->isAFor(['admin', 'moderator'], $account));
 
-        $this->assertFalse($user->isAll('editor', 'moderator'));
+        $this->assertTrue($user->isAll('editor', 'moderator'));
         $this->assertTrue($user->isAllFor(['editor', 'moderator'], $account));
 
-        // $this->assertFalse($user->isAll('moderator', 'admin'));
         $this->assertFalse($user->isAllFor(['moderator', 'admin'], $account));
     }
 
