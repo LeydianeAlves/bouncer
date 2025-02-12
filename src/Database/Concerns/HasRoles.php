@@ -58,7 +58,7 @@ trait HasRoles
     /**
      * Get all of the model's assigned roles for model.
      *
-     * @param Model|string $restrictedModel
+     * @param  Model|string  $restrictedModel
      * @return \Illuminate\Support\Collection
      */
     public function getRolesForRoleRestriction($restrictedModel)
@@ -179,7 +179,7 @@ trait HasRoles
      * Check if the model has any of the given roles for the given model.
      *
      * Alias for the "isAFor" method.
-     * 
+     *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
@@ -207,7 +207,7 @@ trait HasRoles
      * Check if the model has none of the given roles for the given model.
      *
      * Alias for the "isNotAFor" method.
-     * 
+     *
      * @param  array|string  $roles
      * @param  Model|string  $restrictedModel
      * @return bool
@@ -217,7 +217,7 @@ trait HasRoles
         return $this->isNotAFor($roles, $restrictedModel);
     }
 
-     /**
+    /**
      * Check if the model has all of the given roles for the given model.
      *
      * @param  array|string  $roles

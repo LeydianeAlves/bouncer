@@ -5,8 +5,8 @@ namespace Silber\Bouncer\Conductors;
 use Illuminate\Database\Eloquent\Model;
 use Silber\Bouncer\Conductors\Concerns\ConductsRoles;
 use Silber\Bouncer\Database\Models;
-use Silber\Bouncer\Database\Role;
 use Silber\Bouncer\Database\Queries\RolesForRestriction;
+use Silber\Bouncer\Database\Role;
 use Silber\Bouncer\Helpers;
 
 class RemovesRoles
@@ -139,7 +139,7 @@ class RemovesRoles
     protected function getDetachQueryConstraint($roleId, $authorityId, $morphType, $restriction = null)
     {
         return function ($query) use ($roleId, $authorityId, $morphType, $restriction) {
-            $query->where(Models::scope()->getAttachAttributes() 
+            $query->where(Models::scope()->getAttachAttributes()
                 + RolesForRestriction::getAttachAttributes($restriction)
                 + [
                     'role_id' => $roleId,

@@ -154,7 +154,7 @@ class Guard
         if (count($arguments) > 2) {
             return;
         }
-        
+
         [$model, $restriction] = Helpers::parseArguments($arguments);
 
         return $this->checkAtClipboard($authority, $ability, $model, $restriction);

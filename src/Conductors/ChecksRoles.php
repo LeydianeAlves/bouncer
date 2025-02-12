@@ -96,7 +96,7 @@ class ChecksRoles
     public function aFor($roles, $restrictedModel)
     {
         return $this->clipboard
-            ->checkRole($this->authority,  Helpers::toArray($roles), 'or', $restrictedModel);
+            ->checkRole($this->authority, Helpers::toArray($roles), 'or', $restrictedModel);
     }
 
     /**
@@ -108,7 +108,7 @@ class ChecksRoles
      */
     public function anFor($roles, $restrictedModel)
     {
-        return $this->aFor($roles, $restrictedModel,);
+        return $this->aFor($roles, $restrictedModel);
     }
 
     /**
@@ -124,7 +124,7 @@ class ChecksRoles
             ->checkRole($this->authority, Helpers::toArray($roles), 'not', $restrictedModel);
     }
 
-   /**
+    /**
      * Alias to the "isNotAFor" method..
      *
      * @param  array|string  $roles

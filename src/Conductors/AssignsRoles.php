@@ -118,15 +118,15 @@ class AssignsRoles
     {
         // if there any restrictions, create a record for each role-authority-restriction combinations
         // if none, create a record for each role-authority pairing instead
-        if ( !empty($restrictions)) {
+        if (! empty($restrictions)) {
             return collect($restrictions)
                 ->crossJoin($roleIds, $authorityIds)
                 ->mapSpread(function ($restriction, $roleId, $authorityId) use ($morphType) {
                     return $this->getAttachAttributes(
                         $roleId, $authorityId, $morphType, $restriction
                     );
-            });
-        } 
+                });
+        }
 
         return $roleIds
             ->crossJoin($authorityIds)
@@ -139,17 +139,17 @@ class AssignsRoles
 
     /**
      * Get the base attach attributes for the raw records
-     * 
-     * @param int $roleId
-     * @param int $authorityId
-     * @param string $morphType
-     * @param \Illuminate\Database\Eloquent\Model|null $restriction
+     *
+     * @param  int  $roleId
+     * @param  int  $authorityId
+     * @param  string  $morphType
+     * @param  \Illuminate\Database\Eloquent\Model|null  $restriction
      * @return array
      */
-    public function getAttachAttributes($roleId, $authorityId, $morphType, $restriction = null) 
+    public function getAttachAttributes($roleId, $authorityId, $morphType, $restriction = null)
     {
-        return 
-            Models::scope()->getAttachAttributes() 
+        return
+            Models::scope()->getAttachAttributes()
             + RolesForRestriction::getAttachAttributes($restriction)
             + [
                 'role_id' => $roleId,

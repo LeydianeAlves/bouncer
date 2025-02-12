@@ -11,7 +11,7 @@ class Abilities
      * Get a query for the authority's abilities.
      *
      * @param  bool  $allowed
-     * @param Model|string|null $restrictedModel
+     * @param  Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public static function forAuthority(Model $authority, $allowed = true, $restrictedModel = null)
@@ -82,13 +82,13 @@ class Abilities
      * This method returns a closure that adds constraints to the query for roles
      * assigned to the specified authority, optionally considering a restricted model.
      *
-     * @param bool $allowed
-     * @param Model|string|null $restrictedModel
+     * @param  bool  $allowed
+     * @param  Model|string|null  $restrictedModel
      * @return \Closure
      */
     protected static function getAuthorityRoleConstraint(Model $authority, $allowed, $restrictedModel = null)
     {
-        return function ($query) use ($authority, $allowed, $restrictedModel) {
+        return function ($query) use ($authority, $restrictedModel) {
             $pivot = Models::table('assigned_roles');
             $roles = Models::table('roles');
             $table = $authority->getTable();
@@ -102,7 +102,6 @@ class Abilities
             Models::scope()->applyToModelQuery($query, $roles);
             Models::scope()->applyToRelationQuery($query, $pivot);
 
-            // When checking for allowed abilities, apply restrictions. For forbidden abilities, include all without restrictions.
             if ($restrictedModel) {
                 RolesForRestriction::constrain($query, $restrictedModel, $pivot);
             }

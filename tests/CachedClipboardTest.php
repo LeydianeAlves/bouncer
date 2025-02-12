@@ -46,9 +46,9 @@ class CachedClipboardTest extends BaseTestCase
 
         $bouncer->assign('admin')->to($user)->for($account);
         $bouncer->assign('viewer')->to($user);
-        
+
         $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
-        $this->assertEquals(['ban-users', 'delete-users','view-users'], $this->getAbilities($user));
+        $this->assertEquals(['ban-users', 'delete-users', 'view-users'], $this->getAbilities($user));
 
         $bouncer->allow('admin')->to('create-users');
         $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
@@ -85,7 +85,7 @@ class CachedClipboardTest extends BaseTestCase
 
         $bouncer->assign('editor')->to($user)->for($account);
 
-        $this->assertTrue($bouncer->is($user)->aFor( 'editor', $account));
+        $this->assertTrue($bouncer->is($user)->aFor('editor', $account));
         $this->assertTrue($bouncer->is($user)->a('editor'));
 
         $bouncer->assign('moderator')->to($user)->for($account);

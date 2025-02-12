@@ -234,7 +234,7 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $bouncer->allow('admin')->to('view', Account::class);
 
         $user->assign('admin', $account);
-   
+
         $this->assertEquals(['admin'], $user->getRolesForRoleRestriction($account)->all());
 
         $this->assertTrue($bouncer->can('edit-site', [null, $account]));
@@ -262,7 +262,7 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $bouncer->allow('admin')->to('view', Account::class);
 
         $user->assign(['admin', 'viewer'], [$account, $account2]);
-    
+
         $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account)->all());
         $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account2)->all());
 
@@ -275,7 +275,6 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $this->assertTrue($bouncer->cannot('view', [Account::class, $account]));
         $this->assertTrue($bouncer->cannot('view', [Account::class, $account2]));
     }
-
 
     #[Test]
     #[DataProvider('bouncerProvider')]

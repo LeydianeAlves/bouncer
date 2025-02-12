@@ -35,7 +35,7 @@ class RoleRestrictionsTest extends BaseTestCase
         $account = Account::create();
 
         $bouncer->assign(['admin', 'moderator'])->to($user)->for($account);
-        
+
         $record = $user->roles()->first();
         $this->assertEquals(Account::class, $record->pivot->restricted_to_type);
         $this->assertEquals($account->getKey(), $record->pivot->restricted_to_id);
@@ -106,7 +106,7 @@ class RoleRestrictionsTest extends BaseTestCase
         $bouncer->allow('admin')->to('view', Account::class);
         $bouncer->allow('admin')->to('view', User::class);
         $bouncer->allow('admin')->to('edit-site');
-        
+
         $this->assertFalse($bouncer->can('edit', [null, $account]));
         $this->assertTrue($bouncer->can('view', [Account::class, $account]));
         $this->assertTrue($bouncer->canAny(['edit', 'view'], [Account::class, $account]));

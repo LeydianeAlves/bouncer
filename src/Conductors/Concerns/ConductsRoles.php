@@ -5,7 +5,6 @@ namespace Silber\Bouncer\Conductors\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Silber\Bouncer\Conductors\Lazy;
-use Silber\Bouncer\Helpers;
 use Workbench\App\Models\User;
 
 trait ConductsRoles
@@ -19,14 +18,15 @@ trait ConductsRoles
     protected function shouldConductLazy($authorities)
     {
         // We'll only create a lazy conductor if we got a single
-        // param, and that single param is either a single authority or 
+        // param, and that single param is either a single authority or
         // an array of authorities.
-        
+
         if (func_num_args() > 1) {
             return false;
         }
 
         $authorities = is_array($authorities) ? $authorities : [$authorities];
+
         return (new Collection($authorities))
             ->every(function ($authority) {
                 return $authority instanceof Model || $authority instanceof User;
@@ -57,8 +57,8 @@ trait ConductsRoles
 
     /**
      * Return an array of the given restricted models
-     * 
-     * @param Model|array|string $restrictedModels
+     *
+     * @param  Model|array|string  $restrictedModels
      * @return array
      */
     public static function getRestrictions($restrictedModels)
@@ -67,17 +67,18 @@ trait ConductsRoles
             return [];
         }
 
-        $restrictions = collect(is_array($restrictedModels) 
-            ? $restrictedModels 
+        $restrictions = collect(is_array($restrictedModels)
+            ? $restrictedModels
             : [$restrictedModels]);
 
         return $restrictions->map(function ($entity) {
-            
+
             if (! $entity instanceof Model) {
                 return new $entity;
             }
+
             return $entity;
-       
+
         })->all();
     }
 }

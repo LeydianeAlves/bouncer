@@ -18,14 +18,14 @@ class ConductsRetraction
      */
     protected $authority;
 
-     /**
+    /**
      * The restricted models the role is retracted from.
      *
      * @var \Illuminate\Database\Eloquent\Model|array
      */
     protected $restrictedModels = null;
 
-   /**
+    /**
      * Constructor.
      *
      * @param  \Silber\Bouncer\Conductors\Concerns\ConductsRoles  $conductor

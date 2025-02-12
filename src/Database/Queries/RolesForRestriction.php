@@ -21,6 +21,7 @@ class RolesForRestriction
         if (is_null($restrictedModel)) {
             return self::constrainToGlobalRoles($query, $table);
         }
+
         return $query->where(function ($query) use ($restrictedModel, $table) {
             return $query->where(self::constrainRoleToRoleRestriction($restrictedModel, $table));
         });
@@ -39,7 +40,7 @@ class RolesForRestriction
             ->whereNull("$table.restricted_to_type");
     }
 
-     /**
+    /**
      * Get the constraint for restricted roles.
      *
      * @param  string  $table
@@ -73,29 +74,28 @@ class RolesForRestriction
         };
     }
 
- 
     /**
      * Apply restrictions to a query
-     * 
+     *
      * @param  \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder  $query
-     * @param  array   $restrictions
+     * @param  array  $restrictions
      * @param  string  $table
      * @return \Illuminate\Database\Query\Builder
      */
     public static function applyRestrictionsToQuery($query, $restrictions, $table = '')
     {
-        if ( !empty($restrictions)) {
+        if (! empty($restrictions)) {
             [$models, $strings] = self::partitionTypes($restrictions);
 
             $restrictionIds = Helpers::mapItemsBy($models, 'getKey')->all();
             $morphTypes = Helpers::mapItemsBy($strings, 'getMorphClass')
                 ->merge(Helpers::mapItemsBy($models, 'getMorphClass'))
                 ->all();
-           
+
             return $query->where(function ($query) use ($table, $restrictionIds) {
                 return $query->whereIn("$table.restricted_to_id", $restrictionIds)
                     ->orWhereNull("$table.restricted_to_id");
-            })->whereIn("$table.restricted_to_type", $morphTypes);  
+            })->whereIn("$table.restricted_to_type", $morphTypes);
         }
 
         return $query->whereNull("$table.restricted_to_id")
@@ -104,35 +104,35 @@ class RolesForRestriction
 
     /**
      * Partition the restricted models by types
-     * 
+     *
      * @param  array  $restrictions
      * @return Collection
      */
-    static function partitionTypes($restrictions)
+    public static function partitionTypes($restrictions)
     {
-        return Helpers::partition($restrictions, function($entity) {
+        return Helpers::partition($restrictions, function ($entity) {
             return $entity instanceof Model;
         });
     }
 
     /**
      * Get the additional attributes for this model.
-     * 
-     * @param Model|string|null $restrictedModel
+     *
+     * @param  Model|string|null  $restrictedModel
      * @return array
      */
     public static function getAttachAttributes($restrictedModel)
     {
-         if ( is_null($restrictedModel)) {
-             return [
-                 'restricted_to_id' => null,
-                 'restricted_to_type' => null
-             ];
-         }
- 
-         return [
-             'restricted_to_id' => $restrictedModel->exists ? $restrictedModel->getKey() : null,
-             'restricted_to_type' => $restrictedModel->getMorphClass(),
-         ];
+        if (is_null($restrictedModel)) {
+            return [
+                'restricted_to_id' => null,
+                'restricted_to_type' => null,
+            ];
+        }
+
+        return [
+            'restricted_to_id' => $restrictedModel->exists ? $restrictedModel->getKey() : null,
+            'restricted_to_type' => $restrictedModel->getMorphClass(),
+        ];
     }
 }

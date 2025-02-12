@@ -139,7 +139,7 @@ class BouncerSimpleTest extends BaseTestCase
         $account1 = Account::create();
 
         $bouncer->allow('admin')->to('ban-users');
-        
+
         $bouncer->assign('admin')->to($user1)->for($account1);
 
         $this->assertTrue($bouncer->can('ban-users'));
@@ -164,12 +164,12 @@ class BouncerSimpleTest extends BaseTestCase
 
         $this->assertTrue($bouncer->is($user)->allFor(['admin', 'viewer'], $account1));
         $this->assertTrue($bouncer->is($user)->allFor(['admin', 'viewer'], $account2));
-  
+
         $bouncer->retract(['admin', 'viewer'])->from($user)->for([$account1, $account2]);
 
         $this->assertTrue($bouncer->is($user)->notAFor(['admin', 'viewer'], $account1));
         $this->assertTrue($bouncer->is($user)->notAFor(['admin', 'viewer'], $account2));
-    } 
+    }
 
     #[Test]
     public function deleting_a_role_deletes_the_pivot_table_records()

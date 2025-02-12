@@ -42,8 +42,6 @@ trait IsRole
 
     /**
      * The users relationship.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function users(): MorphToMany
     {
@@ -235,7 +233,7 @@ trait IsRole
 
     /**
      * Constrain the given query to roles that were assigned to the given authorities.
-     * 
+     *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  Model|string  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
@@ -243,6 +241,7 @@ trait IsRole
     public function scopeFor($query, $restrictedModel)
     {
         $pivot = Models::table('assigned_roles');
+
         return RolesForRestriction::constrain($query, $restrictedModel, $pivot);
     }
 }

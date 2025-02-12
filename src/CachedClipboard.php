@@ -27,7 +27,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
 
     /**
      * The stored cached keys
-     * 
+     *
      * @var array
      */
     protected $cachedKeys = [];
@@ -82,10 +82,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         // If so, we'll return false right away, so as to not pass the check. Then,
         // we'll check if any of them have been allowed & return the matched ID.
         $forbiddenId = $this->findMatchingAbility(
-            $this->getForbiddenAbilities($authority), 
-            $applicable, 
-            $model, 
-            $authority
+            $this->getForbiddenAbilities($authority), $applicable, $model, $authority
         );
 
         if ($forbiddenId) {
@@ -93,9 +90,9 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         }
 
         return $this->findMatchingAbility(
-            $this->getAbilities($authority, true, $restrictedModel), 
-            $applicable, 
-            $model, 
+            $this->getAbilities($authority, true, $restrictedModel),
+            $applicable,
+            $model,
             $authority,
         );
     }
@@ -204,13 +201,10 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      */
     public function getAbilities(Model $authority, $allowed = true, $restrictedModel = null)
     {
-        // If no restriction is passed, we'll get all of the abilities. If the 
-        // restriction is passed, we'll only get the abilities that have been granted
-        // via this restriction.
+        // Gets all abilities unless it needs to be explicitly filtered for the restriction
         $key = $restrictedModel
             ? $this->getCacheKey($authority, 'restricted-abilities', $allowed, $restrictedModel)
             : $this->getCacheKey($authority, 'abilities', $allowed);
-
 
         if (is_array($abilities = $this->cache->get($key))) {
             return $this->deserializeAbilities($abilities);
@@ -233,7 +227,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     public function cacheForever($key, $value)
     {
         $this->cache->forever($key, $value);
-        $this->cachedKeys[] = $key; 
+        $this->cachedKeys[] = $key;
     }
 
     /**
@@ -243,8 +237,8 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      * @param  Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilitiesForRoleRestriction(Model $authority, $allowed = true, $restrictedModel)
-   {
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed, $restrictedModel)
+    {
         return $this->getAbilities($authority, $allowed, $restrictedModel);
     }
 
@@ -257,23 +251,24 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      */
     public function getFreshAbilities(Model $authority, $allowed, $restrictedModel = null)
     {
-        if ($restrictedModel && $allowed) {
+        if ($restrictedModel) {
             return parent::getAbilitiesForRoleRestriction($authority, $allowed, $restrictedModel);
         }
-    
+
         return parent::getAbilities($authority, $allowed);
     }
 
     /**
      * Get the given authority's roles' IDs and names.
      *
-     * @param Model|string|null $restrictedModel
+     * @param  Model|string|null  $restrictedModel
      * @return array
      */
     public function getRolesLookup(Model $authority, $restrictedModel = null)
     {
+        // Gets all roles unless it needs to be explicitly filtered for the restriction
         $key = $restrictedModel
-            ? $this->getCacheKey($authority, 'restricted-roles',  true, $restrictedModel)
+            ? $this->getCacheKey($authority, 'restricted-roles', true, $restrictedModel)
             : $this->getCacheKey($authority, 'roles');
 
         return $this->sear($key, function () use ($authority, $restrictedModel) {
@@ -330,8 +325,8 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
                 if (strpos($key, $this->getCacheKey($authority, $type, true) !== false)
                     || strpos($key, $this->getCacheKey($authority, $type, false) !== false)
                 ) {
-                    $this->cache->forget($key); 
-                    
+                    $this->cache->forget($key);
+
                     $this->cachedKeys = array_filter($this->cachedKeys, function ($cachedKey) use ($key) {
                         return $cachedKey !== $key;
                     });
@@ -344,15 +339,16 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
 
     /**
      * Clear the cache and the stored keys
-     * 
+     *
      * @return void
      */
-    protected function forgetAllKeys() {
+    protected function forgetAllKeys()
+    {
         foreach ($this->cachedKeys as $key) {
-            $this->cache->forget($key); 
+            $this->cache->forget($key);
         }
 
-        $this->cachedKeys = [];  
+        $this->cachedKeys = [];
     }
 
     /**
@@ -390,17 +386,16 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         ];
 
         if ($restrictedModel) {
-            $keys[] = $this->appendRoleRestrictionToCacheKey( $restrictedModel);
+            $keys[] = $this->appendRoleRestrictionToCacheKey($restrictedModel);
         }
-
 
         return implode('-', $keys);
     }
 
     /**
      * Append the given restricted model to the cache key string
-     * 
-     * @param Model|string $restrictedModel
+     *
+     * @param  Model|string  $restrictedModel
      * @return string
      */
     protected function appendRoleRestrictionToCacheKey($restrictedModel)
@@ -410,7 +405,8 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         if ($restrictedModel->exists) {
             $modelKey = $restrictedModel->getKey();
             $key .= "-$modelKey";
-        } 
+        }
+
         return $key;
     }
 

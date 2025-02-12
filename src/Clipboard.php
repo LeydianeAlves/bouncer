@@ -50,7 +50,7 @@ class Clipboard extends BaseClipboard
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Model|null
      */
-    protected function getAllowingAbility(Model $authority, $ability, $model = null, $restrictedModel)
+    protected function getAllowingAbility(Model $authority, $ability, $model, $restrictedModel)
     {
         return $this->getHasAbilityQuery(
             $authority, $ability, $model, $allowed = true, $restrictedModel
@@ -70,8 +70,7 @@ class Clipboard extends BaseClipboard
     protected function getHasAbilityQuery($authority, $ability, $model, $allowed, $restrictedModel)
     {
         // skips the `authority` and `everyone` constraints when checking for a restricted model only
-        // if allowed is false, always check all abilities for the user
-        $query = $restrictedModel && $allowed
+        $query = $restrictedModel
             ? Abilities::restrictedForAuthority($authority, $restrictedModel, $allowed)
             : Abilities::forAuthority($authority, $allowed);
 

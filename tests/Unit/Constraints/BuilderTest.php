@@ -13,7 +13,7 @@ class BuilderTest extends TestCase
     #[Test]
     public function building_without_constraints_returns_empty_group()
     {
-        $actual = (new Builder())->build();
+        $actual = (new Builder)->build();
 
         $expected = new Group;
 

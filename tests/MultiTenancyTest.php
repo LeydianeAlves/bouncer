@@ -18,7 +18,7 @@ class MultiTenancyTest extends BaseTestCase
     /**
      * Reset any scopes that have been applied in a test.
      */
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         Models::scope(new Scope);
 
