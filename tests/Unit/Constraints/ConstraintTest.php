@@ -15,7 +15,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_implicit_equals()
     {
-        $authority = new User();
+        $authority = new User;
         $activeAccount = new Account(['active' => true]);
         $inactiveAccount = new Account(['active' => false]);
 
@@ -28,7 +28,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_explicit_equals()
     {
-        $authority = new User();
+        $authority = new User;
         $activeAccount = new Account(['active' => true]);
         $inactiveAccount = new Account(['active' => false]);
 
@@ -41,7 +41,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_explicit_double_equals()
     {
-        $authority = new User();
+        $authority = new User;
         $activeAccount = new Account(['active' => true]);
         $inactiveAccount = new Account(['active' => false]);
 
@@ -54,7 +54,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_not_equals()
     {
-        $authority = new User();
+        $authority = new User;
         $activeAccount = new Account(['active' => true]);
         $inactiveAccount = new Account(['active' => false]);
 
@@ -67,7 +67,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_greater_than()
     {
-        $authority = new User();
+        $authority = new User;
         $forty = new User(['age' => 40]);
         $fortyOne = new User(['age' => 41]);
 
@@ -80,7 +80,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_less_than()
     {
-        $authority = new User();
+        $authority = new User;
         $thirtyNine = new User(['age' => 39]);
         $forty = new User(['age' => 40]);
 
@@ -93,7 +93,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_greater_than_or_equal()
     {
-        $authority = new User();
+        $authority = new User;
         $minor = new User(['age' => 17]);
         $adult = new User(['age' => 18]);
         $senior = new User(['age' => 80]);
@@ -108,7 +108,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_less_than_or_equal()
     {
-        $authority = new User();
+        $authority = new User;
         $youngerTeen = new User(['age' => 18]);
         $olderTeen = new User(['age' => 19]);
         $adult = new User(['age' => 20]);
@@ -239,7 +239,7 @@ class ConstraintTest extends TestCase
     #[Test]
     public function value_constraint_can_be_properly_serialized_and_deserialized()
     {
-        $authority = new User();
+        $authority = new User;
         $activeAccount = new Account(['active' => true]);
         $inactiveAccount = new Account(['active' => false]);
 

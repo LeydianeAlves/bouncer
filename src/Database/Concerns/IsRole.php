@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Silber\Bouncer\Database\Models;
 use Silber\Bouncer\Database\Queries\Roles as RolesQuery;
+use Silber\Bouncer\Database\Queries\RolesForRestriction;
 use Silber\Bouncer\Database\Scope\TenantScope;
 use Silber\Bouncer\Database\Titles\RoleTitle;
 use Silber\Bouncer\Helpers;
@@ -41,8 +42,6 @@ trait IsRole
 
     /**
      * The users relationship.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphedToMany
      */
     public function users(): MorphToMany
     {
@@ -50,7 +49,7 @@ trait IsRole
             Models::classname(User::class),
             'entity',
             Models::table('assigned_roles')
-        )->withPivot('scope');
+        )->withPivot(['scope', 'restricted_to_id', 'restricted_to_type']);
 
         return Models::scope()->applyToRelation($relation);
     }
@@ -230,5 +229,19 @@ trait IsRole
     public function scopeWhereAssignedTo($query, $model, ?array $keys = null)
     {
         (new RolesQuery)->constrainWhereAssignedTo($query, $model, $keys);
+    }
+
+    /**
+     * Constrain the given query to roles that were assigned to the given authorities.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Model|string  $restrictedModel
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Query\Builder
+     */
+    public function scopeFor($query, $restrictedModel)
+    {
+        $pivot = Models::table('assigned_roles');
+
+        return RolesForRestriction::constrain($query, $restrictedModel, $pivot);
     }
 }

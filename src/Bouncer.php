@@ -75,7 +75,7 @@ class Bouncer
      */
     public function allowEveryone()
     {
-        return new Conductors\GivesAbilities();
+        return new Conductors\GivesAbilities;
     }
 
     /**
@@ -96,7 +96,7 @@ class Bouncer
      */
     public function disallowEveryone()
     {
-        return new Conductors\RemovesAbilities();
+        return new Conductors\RemovesAbilities;
     }
 
     /**
@@ -117,7 +117,7 @@ class Bouncer
      */
     public function forbidEveryone()
     {
-        return new Conductors\ForbidsAbilities();
+        return new Conductors\ForbidsAbilities;
     }
 
     /**
@@ -138,7 +138,7 @@ class Bouncer
      */
     public function unforbidEveryone()
     {
-        return new Conductors\UnforbidsAbilities();
+        return new Conductors\UnforbidsAbilities;
     }
 
     /**
