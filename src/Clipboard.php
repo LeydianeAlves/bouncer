@@ -69,10 +69,7 @@ class Clipboard extends BaseClipboard
      */
     protected function getHasAbilityQuery($authority, $ability, $model, $allowed, $restrictedModel)
     {
-        // skips the `authority` and `everyone` constraints when checking for a restricted model only
-        $query = $restrictedModel
-            ? Abilities::restrictedForAuthority($authority, $restrictedModel, $allowed)
-            : Abilities::forAuthority($authority, $allowed);
+        $query = Abilities::forAuthority($authority, $allowed, $restrictedModel);
 
         if (! $this->isOwnedBy($authority, $model)) {
             $query->where('only_owned', false);

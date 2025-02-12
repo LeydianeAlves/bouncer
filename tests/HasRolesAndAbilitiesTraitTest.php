@@ -63,17 +63,17 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
 
         $bouncer->allow('admin')->to('edit-site');
         $bouncer->allow('viewer')->to('view', $account);
-        $bouncer->allow($user)->to('create-accounts');
 
-        $bouncer->assign(['admin', 'viewer'])->to($user)->for($account);
+        $bouncer->assign(['admin'])->to($user)->for($account);
+        $bouncer->assign(['viewer'])->to($user)->for(Account::create());
 
         $this->assertEquals(
-            ['edit-site', 'view'],
+            ['edit-site'],
             $user->getAbilitiesForRoleRestriction($account)->pluck('name')->sort()->values()->all()
         );
 
         $this->assertEquals(
-            ['create-accounts', 'edit-site', 'view'],
+            ['edit-site', 'view'],
             $user->getAbilities()->pluck('name')->sort()->values()->all()
         );
     }
@@ -86,8 +86,9 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $account = Account::create();
 
         $bouncer->forbid('admin')->to('edit-site');
-        $bouncer->forbid($user)->to('create-posts');
+        $bouncer->forbid('creator')->to('create-posts');
         $bouncer->assign('admin')->to($user)->for($account);
+        $bouncer->assign('creator')->to($user)->for(Account::create());
 
         $bouncer->allow($user)->to('create-sites');
 

@@ -218,6 +218,18 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     }
 
     /**
+     * Get a list of the authority's restricted abilities
+     *
+     * @param  bool  $allowed
+     * @param  Model|string  $restrictedModel
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed, $restrictedModel)
+    {
+        return $this->getAbilities($authority, $allowed, $restrictedModel);
+    }
+
+    /**
      * Store an item in the cache and store the key in the array.
      *
      * @param  string  $key
@@ -231,18 +243,6 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     }
 
     /**
-     * Get the given authority's restricted abilities.
-     *
-     * @param  bool  $allowed
-     * @param  Model|string|null  $restrictedModel
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getAbilitiesForRoleRestriction(Model $authority, $allowed, $restrictedModel)
-    {
-        return $this->getAbilities($authority, $allowed, $restrictedModel);
-    }
-
-    /**
      * Get a fresh copy of the given authority's abilities.
      *
      * @param  bool  $allowed
@@ -251,11 +251,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      */
     public function getFreshAbilities(Model $authority, $allowed, $restrictedModel = null)
     {
-        if ($restrictedModel) {
-            return parent::getAbilitiesForRoleRestriction($authority, $allowed, $restrictedModel);
-        }
-
-        return parent::getAbilities($authority, $allowed);
+        return parent::getAbilities($authority, $allowed, $restrictedModel);
     }
 
     /**

@@ -42,10 +42,10 @@ class CachedClipboardTest extends BaseTestCase
         $account = Account::create();
 
         $bouncer->allow('admin')->to(['ban-users', 'delete-users']);
-        $bouncer->allow($user)->to('view-users');
+        $bouncer->allow('viewer')->to('view-users');
 
         $bouncer->assign('admin')->to($user)->for($account);
-        $bouncer->assign('viewer')->to($user);
+        $bouncer->assign('viewer')->to($user)->for(Account::create());
 
         $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
         $this->assertEquals(['ban-users', 'delete-users', 'view-users'], $this->getAbilities($user));

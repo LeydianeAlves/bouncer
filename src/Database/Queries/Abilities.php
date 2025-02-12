@@ -34,20 +34,6 @@ class Abilities
     }
 
     /**
-     * Get a query for the authority's abilities given for a restricted model.
-     *
-     * @param  Model|string  $restrictedModel
-     * @param  bool  $allowed
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function restrictedForAuthority(Model $authority, $restrictedModel, $allowed = true)
-    {
-        return Models::ability()->where(function ($query) use ($authority, $allowed, $restrictedModel) {
-            $query->whereExists(static::getRoleConstraint($authority, $allowed, $restrictedModel));
-        });
-    }
-
-    /**
      * Get a constraint for abilities that have been granted to the given authority through a role.
      *
      * @param  bool  $allowed
