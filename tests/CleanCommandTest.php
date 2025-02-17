@@ -14,7 +14,7 @@ class CleanCommandTest extends BaseTestCase
     /**
      * Setup the world for the tests.
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
         Artisan::starting(
             fn ($artisan) => $artisan->resolveCommands(CleanCommand::class)

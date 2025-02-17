@@ -12,15 +12,15 @@ class Clipboard extends BaseClipboard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return int|bool|null
      */
-    public function checkGetId(Model $authority, $ability, $model = null)
+    public function checkGetId(Model $authority, $ability, $model = null, $restrictedModel = null)
     {
         if ($this->isForbidden($authority, $ability, $model)) {
             return false;
         }
-
-        $ability = $this->getAllowingAbility($authority, $ability, $model);
+        $ability = $this->getAllowingAbility($authority, $ability, $model, $restrictedModel);
 
         return $ability ? $ability->getKey() : null;
     }
@@ -30,12 +30,13 @@ class Clipboard extends BaseClipboard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return bool
      */
-    protected function isForbidden(Model $authority, $ability, $model = null)
+    protected function isForbidden(Model $authority, $ability, $model = null, $restrictedModel = null)
     {
         return $this->getHasAbilityQuery(
-            $authority, $ability, $model, $allowed = false
+            $authority, $ability, $model, $allowed = false, $restrictedModel
         )->exists();
     }
 
@@ -46,12 +47,13 @@ class Clipboard extends BaseClipboard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Model|null
      */
-    protected function getAllowingAbility(Model $authority, $ability, $model = null)
+    protected function getAllowingAbility(Model $authority, $ability, $model, $restrictedModel)
     {
         return $this->getHasAbilityQuery(
-            $authority, $ability, $model, $allowed = true
+            $authority, $ability, $model, $allowed = true, $restrictedModel
         )->first();
     }
 
@@ -62,11 +64,12 @@ class Clipboard extends BaseClipboard
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
      * @param  bool  $allowed
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function getHasAbilityQuery($authority, $ability, $model, $allowed)
+    protected function getHasAbilityQuery($authority, $ability, $model, $allowed, $restrictedModel)
     {
-        $query = Abilities::forAuthority($authority, $allowed);
+        $query = Abilities::forAuthority($authority, $allowed, $restrictedModel);
 
         if (! $this->isOwnedBy($authority, $model)) {
             $query->where('only_owned', false);

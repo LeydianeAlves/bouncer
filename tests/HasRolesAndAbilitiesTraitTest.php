@@ -5,6 +5,7 @@ namespace Silber\Bouncer\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Silber\Bouncer\Database\Models;
+use Workbench\App\Models\Account;
 use Workbench\App\Models\User;
 use Workbench\App\Models\UserWithSoftDeletes;
 
@@ -19,14 +20,17 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         [$bouncer, $user] = $provider();
 
         $bouncer->allow('admin')->to('edit-site');
+        $bouncer->allow('moderator')->to('ban-users');
         $bouncer->allow($user)->to('create-posts');
+
         $bouncer->assign('admin')->to($user);
+        $bouncer->assign('moderator')->to($user)->for(Account::create());
 
         $bouncer->forbid($user)->to('create-sites');
         $bouncer->allow('editor')->to('edit-posts');
 
         $this->assertEquals(
-            ['create-posts', 'edit-site'],
+            ['ban-users', 'create-posts', 'edit-site'],
             $user->getAbilities()->pluck('name')->sort()->values()->all()
         );
     }
@@ -47,6 +51,56 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $this->assertEquals(
             ['create-posts', 'edit-site'],
             $user->getForbiddenAbilities()->pluck('name')->sort()->values()->all()
+        );
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function get_abilities_for_restricted_model_gets_abilities_only_for_that_model($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+
+        $bouncer->allow('admin')->to('edit-site');
+        $bouncer->allow('viewer')->to('view', $account);
+
+        $bouncer->assign(['admin'])->to($user)->for($account);
+        $bouncer->assign(['viewer'])->to($user)->for(Account::create());
+
+        $this->assertEquals(
+            ['edit-site'],
+            $user->getAbilitiesForRoleRestriction($account)->pluck('name')->sort()->values()->all()
+        );
+
+        $this->assertEquals(
+            ['edit-site', 'view'],
+            $user->getAbilities()->pluck('name')->sort()->values()->all()
+        );
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function get_forbidden_abilities_for_a_restricted_model_gets_all_forbidden_abilities_for_that_model($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+
+        $bouncer->forbid('admin')->to('edit-site');
+        $bouncer->forbid('creator')->to('create-posts');
+        $bouncer->assign('admin')->to($user)->for($account);
+        $bouncer->assign('creator')->to($user)->for(Account::create());
+
+        $bouncer->allow($user)->to('create-sites');
+
+        $this->assertEquals(
+            ['create-posts', 'edit-site'],
+            $user->getForbiddenAbilities()->pluck('name')->sort()->values()->all()
+        );
+
+        $this->assertEquals(
+            ['edit-site'],
+            $user->getForbiddenAbilitiesForRoleRestriction($account)
+                ->pluck('name')->sort()->values()->all()
         );
     }
 
@@ -149,6 +203,9 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $this->assertTrue($bouncer->can('delete', $user));
     }
 
+    // user can with restriction
+    // user can with model and restriction
+
     #[Test]
     #[DataProvider('bouncerProvider')]
     public function can_assign_and_retract_roles($provider)
@@ -165,6 +222,59 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
 
         $this->assertEquals([], $user->getRoles()->all());
         $this->assertTrue($bouncer->cannot('edit-site'));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_assign_and_retract_roles_for_restricted_model($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+
+        $bouncer->allow('admin')->to('edit-site');
+        $bouncer->allow('admin')->to('view', Account::class);
+
+        $user->assign('admin', $account);
+
+        $this->assertEquals(['admin'], $user->getRolesForRoleRestriction($account)->all());
+
+        $this->assertTrue($bouncer->can('edit-site', [null, $account]));
+        $this->assertTrue($bouncer->can('edit-site'));
+
+        $this->assertTrue($bouncer->can('view', [Account::class, $account]));
+        $this->assertTrue($bouncer->cannot('view', [null, $account]));
+        $this->assertTrue($bouncer->cannot('view'));
+
+        $user->retract('admin', $account);
+
+        $this->assertEquals([], $user->getRoles()->all());
+        $this->assertTrue($bouncer->cannot('edit-site', [null, $account]));
+        $this->assertTrue($bouncer->cannot('view', [Account::class, $account]));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_assign_and_retract_roles_for_multiple_restriction($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+        $account2 = Account::create();
+
+        $bouncer->allow('admin')->to('view', Account::class);
+
+        $user->assign(['admin', 'viewer'], [$account, $account2]);
+
+        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account)->all());
+        $this->assertEquals(['viewer', 'admin'], $user->getRolesForRoleRestriction($account2)->all());
+
+        $this->assertTrue($bouncer->can('view', [Account::class, $account]));
+        $this->assertTrue($bouncer->can('view', [Account::class, $account2]));
+
+        $user->retract('admin', [$account, $account2]);
+
+        $this->assertEquals(['viewer'], $user->getRolesForRoleRestriction($account)->all());
+        $this->assertTrue($bouncer->cannot('view', [Account::class, $account]));
+        $this->assertTrue($bouncer->cannot('view', [Account::class, $account2]));
     }
 
     #[Test]
@@ -201,6 +311,27 @@ class HasRolesAndAbilitiesTraitTest extends BaseTestCase
         $this->assertTrue($user->isAn('admin', 'moderator'));
         $this->assertTrue($user->isAll('editor', 'moderator'));
         $this->assertFalse($user->isAll('moderator', 'admin'));
+    }
+
+    #[Test]
+    #[DataProvider('bouncerProvider')]
+    public function can_check_roles_for_restriction($provider)
+    {
+        [$bouncer, $user] = $provider();
+        $account = Account::create();
+
+        $this->assertFalse($user->isA('admin', 'editor'));
+
+        $user->assign('moderator', $account);
+        $user->assign('editor', $account);
+
+        $this->assertTrue($user->isA('admin', 'moderator'));
+        $this->assertTrue($user->isAFor(['admin', 'moderator'], $account));
+
+        $this->assertTrue($user->isAll('editor', 'moderator'));
+        $this->assertTrue($user->isAllFor(['editor', 'moderator'], $account));
+
+        $this->assertFalse($user->isAllFor(['moderator', 'admin'], $account));
     }
 
     #[Test]

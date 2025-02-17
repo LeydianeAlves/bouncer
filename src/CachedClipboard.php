@@ -26,6 +26,13 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     protected $cache;
 
     /**
+     * The stored cached keys
+     *
+     * @var array
+     */
+    protected $cachedKeys = [];
+
+    /**
      * Constructor.
      */
     public function __construct(Store $cache)
@@ -64,9 +71,10 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|string|null  $restrictedModel
      * @return int|bool|null
      */
-    public function checkGetId(Model $authority, $ability, $model = null)
+    public function checkGetId(Model $authority, $ability, $model = null, $restrictedModel = null)
     {
         $applicable = $this->compileAbilityIdentifiers($ability, $model);
 
@@ -82,7 +90,10 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         }
 
         return $this->findMatchingAbility(
-            $this->getAbilities($authority), $applicable, $model, $authority
+            $this->getAbilities($authority, true, $restrictedModel),
+            $applicable,
+            $model,
+            $authority,
         );
     }
 
@@ -185,45 +196,79 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      * Get the given authority's abilities.
      *
      * @param  bool  $allowed
+     * @param  Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getAbilities(Model $authority, $allowed = true)
+    public function getAbilities(Model $authority, $allowed = true, $restrictedModel = null)
     {
-        $key = $this->getCacheKey($authority, 'abilities', $allowed);
+        // Gets all abilities unless it needs to be explicitly filtered for the restriction
+        $key = $restrictedModel
+            ? $this->getCacheKey($authority, 'restricted-abilities', $allowed, $restrictedModel)
+            : $this->getCacheKey($authority, 'abilities', $allowed);
 
         if (is_array($abilities = $this->cache->get($key))) {
             return $this->deserializeAbilities($abilities);
         }
 
-        $abilities = $this->getFreshAbilities($authority, $allowed);
+        $abilities = $this->getFreshAbilities($authority, $allowed, $restrictedModel);
 
-        $this->cache->forever($key, $this->serializeAbilities($abilities));
+        $this->cacheForever($key, $this->serializeAbilities($abilities));
 
         return $abilities;
+    }
+
+    /**
+     * Get a list of the authority's restricted abilities
+     *
+     * @param  bool  $allowed
+     * @param  Model|string  $restrictedModel
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAbilitiesForRoleRestriction(Model $authority, $allowed, $restrictedModel)
+    {
+        return $this->getAbilities($authority, $allowed, $restrictedModel);
+    }
+
+    /**
+     * Store an item in the cache and store the key in the array.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return void
+     */
+    public function cacheForever($key, $value)
+    {
+        $this->cache->forever($key, $value);
+        $this->cachedKeys[] = $key;
     }
 
     /**
      * Get a fresh copy of the given authority's abilities.
      *
      * @param  bool  $allowed
+     * @param  Model|string|null  $restrictedModel
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getFreshAbilities(Model $authority, $allowed)
+    public function getFreshAbilities(Model $authority, $allowed, $restrictedModel = null)
     {
-        return parent::getAbilities($authority, $allowed);
+        return parent::getAbilities($authority, $allowed, $restrictedModel);
     }
 
     /**
      * Get the given authority's roles' IDs and names.
      *
+     * @param  Model|string|null  $restrictedModel
      * @return array
      */
-    public function getRolesLookup(Model $authority)
+    public function getRolesLookup(Model $authority, $restrictedModel = null)
     {
-        $key = $this->getCacheKey($authority, 'roles');
+        // Gets all roles unless it needs to be explicitly filtered for the restriction
+        $key = $restrictedModel
+            ? $this->getCacheKey($authority, 'restricted-roles', true, $restrictedModel)
+            : $this->getCacheKey($authority, 'roles');
 
-        return $this->sear($key, function () use ($authority) {
-            return parent::getRolesLookup($authority);
+        return $this->sear($key, function () use ($authority, $restrictedModel) {
+            return parent::getRolesLookup($authority, $restrictedModel);
         });
     }
 
@@ -236,7 +281,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
     protected function sear($key, callable $callback)
     {
         if (is_null($value = $this->cache->get($key))) {
-            $this->cache->forever($key, $value = $callback());
+            $this->cacheForever($key, $value = $callback());
         }
 
         return $value;
@@ -257,7 +302,7 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
         if ($this->cache instanceof TaggedCache) {
             $this->cache->flush();
         } else {
-            $this->refreshAllIteratively();
+            $this->forgetAllKeys();
         }
 
         return $this;
@@ -270,11 +315,36 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      */
     public function refreshFor(Model $authority)
     {
-        $this->cache->forget($this->getCacheKey($authority, 'abilities', true));
-        $this->cache->forget($this->getCacheKey($authority, 'abilities', false));
-        $this->cache->forget($this->getCacheKey($authority, 'roles'));
+        // Find all the cache keys and types for this authority and clear them
+        foreach (['abilities', 'restricted-abilities', 'roles', 'restricted-roles'] as $type) {
+            foreach ($this->cachedKeys as $key) {
+                if (strpos($key, $this->getCacheKey($authority, $type, true) !== false)
+                    || strpos($key, $this->getCacheKey($authority, $type, false) !== false)
+                ) {
+                    $this->cache->forget($key);
+
+                    $this->cachedKeys = array_filter($this->cachedKeys, function ($cachedKey) use ($key) {
+                        return $cachedKey !== $key;
+                    });
+                }
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * Clear the cache and the stored keys
+     *
+     * @return void
+     */
+    protected function forgetAllKeys()
+    {
+        foreach ($this->cachedKeys as $key) {
+            $this->cache->forget($key);
+        }
+
+        $this->cachedKeys = [];
     }
 
     /**
@@ -297,18 +367,43 @@ class CachedClipboard extends BaseClipboard implements Contracts\CachedClipboard
      * Get the cache key for the given model's cache type.
      *
      * @param  string  $type
+     * @param  Model|string|null  $restrictedModel
      * @param  bool  $allowed
      * @return string
      */
-    protected function getCacheKey(Model $model, $type, $allowed = true)
+    protected function getCacheKey(Model $model, $type, $allowed = true, $restrictedModel = null)
     {
-        return implode('-', [
+        $keys = [
             $this->tag(),
             $type,
             $model->getMorphClass(),
             $model->getKey(),
             $allowed ? 'a' : 'f',
-        ]);
+        ];
+
+        if ($restrictedModel) {
+            $keys[] = $this->appendRoleRestrictionToCacheKey($restrictedModel);
+        }
+
+        return implode('-', $keys);
+    }
+
+    /**
+     * Append the given restricted model to the cache key string
+     *
+     * @param  Model|string  $restrictedModel
+     * @return string
+     */
+    protected function appendRoleRestrictionToCacheKey($restrictedModel)
+    {
+        $class = $restrictedModel->getMorphClass();
+        $key = "restricted-to-$class";
+        if ($restrictedModel->exists) {
+            $modelKey = $restrictedModel->getKey();
+            $key .= "-$modelKey";
+        }
+
+        return $key;
     }
 
     /**

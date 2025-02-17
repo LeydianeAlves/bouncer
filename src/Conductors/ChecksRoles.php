@@ -4,6 +4,7 @@ namespace Silber\Bouncer\Conductors;
 
 use Illuminate\Database\Eloquent\Model;
 use Silber\Bouncer\Contracts\Clipboard;
+use Silber\Bouncer\Helpers;
 
 class ChecksRoles
 {
@@ -83,5 +84,68 @@ class ChecksRoles
     public function all(...$roles)
     {
         return $this->clipboard->checkRole($this->authority, $roles, 'and');
+    }
+
+    /**
+     * Check if the authority has any of the given roles for the given model.
+     *
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
+     * @return bool
+     */
+    public function aFor($roles, $restrictedModel)
+    {
+        return $this->clipboard
+            ->checkRole($this->authority, Helpers::toArray($roles), 'or', $restrictedModel);
+    }
+
+    /**
+     * Alias to the "isAFor" method..
+     *
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
+     * @return bool
+     */
+    public function anFor($roles, $restrictedModel)
+    {
+        return $this->aFor($roles, $restrictedModel);
+    }
+
+    /**
+     * Check if the authority doesn't have any of the given roles for the given model.
+     *
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
+     * @return bool
+     */
+    public function notAFor($roles, $restrictedModel)
+    {
+        return $this->clipboard
+            ->checkRole($this->authority, Helpers::toArray($roles), 'not', $restrictedModel);
+    }
+
+    /**
+     * Alias to the "isNotAFor" method..
+     *
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
+     * @return bool
+     */
+    public function notAnFor($roles, $restrictedModel)
+    {
+        return $this->notAFor($roles, $restrictedModel);
+    }
+
+    /**
+     * Check if the authority has all of the given roles for the given model.
+     *
+     * @param  array|string  $roles
+     * @param  Model|string  $restrictedModel
+     * @return bool
+     */
+    public function allFor($roles, $restrictedModel)
+    {
+        return $this->clipboard
+            ->checkRole($this->authority, Helpers::toArray($roles), 'and', $restrictedModel);
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\Attributes\Test;
 use Silber\Bouncer\CachedClipboard;
 use Silber\Bouncer\Contracts\Clipboard as ClipboardContract;
+use Workbench\App\Models\Account;
 use Workbench\App\Models\User;
 
 class CachedClipboardTest extends BaseTestCase
@@ -35,6 +36,25 @@ class CachedClipboardTest extends BaseTestCase
     }
 
     #[Test]
+    public function it_caches_restricted_abilities()
+    {
+        $bouncer = $this->bouncer($user = User::create());
+        $account = Account::create();
+
+        $bouncer->allow('admin')->to(['ban-users', 'delete-users']);
+        $bouncer->allow('viewer')->to('view-users');
+
+        $bouncer->assign('admin')->to($user)->for($account);
+        $bouncer->assign('viewer')->to($user)->for(Account::create());
+
+        $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
+        $this->assertEquals(['ban-users', 'delete-users', 'view-users'], $this->getAbilities($user));
+
+        $bouncer->allow('admin')->to('create-users');
+        $this->assertEquals(['ban-users', 'delete-users'], $this->getRestrictedAbilities($user, $account));
+    }
+
+    #[Test]
     public function it_caches_empty_abilities()
     {
         $user = User::create();
@@ -55,6 +75,22 @@ class CachedClipboardTest extends BaseTestCase
         $bouncer->assign('moderator')->to($user);
 
         $this->assertFalse($bouncer->is($user)->a('moderator'));
+    }
+
+    #[Test]
+    public function it_caches_restricted_roles()
+    {
+        $bouncer = $this->bouncer($user = User::create());
+        $account = Account::create();
+
+        $bouncer->assign('editor')->to($user)->for($account);
+
+        $this->assertTrue($bouncer->is($user)->aFor('editor', $account));
+        $this->assertTrue($bouncer->is($user)->a('editor'));
+
+        $bouncer->assign('moderator')->to($user)->for($account);
+
+        $this->assertFalse($bouncer->is($user)->aFor('moderator', $account));
     }
 
     #[Test]
@@ -121,6 +157,13 @@ class CachedClipboardTest extends BaseTestCase
 
         $this->assertEquals([], $this->getAbilities($user1));
         $this->assertEquals(['ban-users'], $this->getAbilities($user2));
+
+        $bouncer->refreshFor($user1);
+
+        $bouncer->retract('admin')->from($user1);
+        $this->assertFalse($user1->isAn('admin'));
+        $this->assertCount(0, $user1->getRoles());
+        $this->assertCount(1, $user2->getRoles());
     }
 
     /**
@@ -131,5 +174,16 @@ class CachedClipboardTest extends BaseTestCase
     protected function getAbilities(Model $user)
     {
         return $user->getAbilities($user)->pluck('name')->sort()->values()->all();
+    }
+
+    /**
+     * Get the name of all of the user's abilities.
+     *
+     * @return array
+     */
+    protected function getRestrictedAbilities(Model $user, $restrictedModel)
+    {
+        return $user->getAbilitiesForRoleRestriction($restrictedModel)
+            ->pluck('name')->sort()->values()->all();
     }
 }

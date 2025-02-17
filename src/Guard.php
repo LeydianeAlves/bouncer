@@ -127,9 +127,9 @@ class Guard
             return;
         }
 
-        $model = isset($arguments[0]) ? $arguments[0] : null;
+        [$model, $restriction] = Helpers::parseArguments($arguments);
 
-        return $this->checkAtClipboard($authority, $ability, $model);
+        return $this->checkAtClipboard($authority, $ability, $model, $restriction);
     }
 
     /**
@@ -155,9 +155,9 @@ class Guard
             return;
         }
 
-        $model = isset($arguments[0]) ? $arguments[0] : null;
+        [$model, $restriction] = Helpers::parseArguments($arguments);
 
-        return $this->checkAtClipboard($authority, $ability, $model);
+        return $this->checkAtClipboard($authority, $ability, $model, $restriction);
     }
 
     /**
@@ -165,11 +165,12 @@ class Guard
      *
      * @param  string  $ability
      * @param  \Illuminate\Database\Eloquent\Model|string|null  $model
+     * @param  \Illuminate\Database\Eloquent\Model|null  $restriction
      * @return mixed
      */
-    protected function checkAtClipboard(Model $authority, $ability, $model)
+    protected function checkAtClipboard(Model $authority, $ability, $model, $restriction)
     {
-        if ($id = $this->clipboard->checkGetId($authority, $ability, $model)) {
+        if ($id = $this->clipboard->checkGetId($authority, $ability, $model, $restriction)) {
             return $this->allow('Bouncer granted permission via ability #'.$id);
         }
 

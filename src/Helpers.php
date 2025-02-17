@@ -212,4 +212,45 @@ class Helpers
 
         return new Collection($partitions);
     }
+
+    /**
+     * Map items by a given method
+     *
+     * @param  iterable  $items
+     * @param  string  $by
+     *
+     * @throws \InvalidArgumentException
+     */
+    public static function mapItemsBy($items, $by): Collection
+    {
+        if (! $items instanceof Collection) {
+            $items = (new Collection($items));
+        }
+
+        return $items->map(function ($item) use ($by) {
+            if (method_exists($item, $by)) {
+                return $item->$by();
+            }
+
+            throw new InvalidArgumentException(
+                "Method {$by} does not exist on the item."
+            );
+        });
+    }
+
+    /**
+     * Parse the arguments and extract the model and restriction model.
+     *
+     * @param  array|mixed  $arguments
+     */
+    public static function parseArguments($arguments = []): array
+    {
+        $arguments = is_array($arguments) ? $arguments : [$arguments];
+
+        // Extract the model (first argument) and restriction (second argument) if exists
+        $model = isset($arguments[0]) ? $arguments[0] : null;
+        $restriction = isset($arguments[1]) ? $arguments[1] : null;
+
+        return [$model, $restriction];
+    }
 }

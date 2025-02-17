@@ -74,7 +74,7 @@ trait IsAbility
     public function getConstraints()
     {
         if (empty($this->options['constraints'])) {
-            return new Group();
+            return new Group;
         }
 
         $data = $this->options['constraints'];
